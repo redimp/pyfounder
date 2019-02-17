@@ -1,0 +1,3 @@
+LABEL      Boot Local HDD
+MENU LABEL Local ^HDD
+LOCALBOOT  0
