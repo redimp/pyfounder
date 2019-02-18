@@ -22,7 +22,15 @@ if [ ! -f $TARGET_DIR/${RELEASE}/ubuntu-installer/amd64/pxelinux.0 ]; then
 fi
 
 if [ ! -e $TARGET_DIR/pxelinux.0 ]; then
-	ln -s $TARGET_DIR/${RELEASE}/ubuntu-installer/amd64/pxelinux.0 $TARGET_DIR/pxelinux.0
+	cd $TARGET_DIR
+	ln -s ${RELEASE}/ubuntu-installer/amd64/pxelinux.0
+	cd -
+fi
+
+if [ ! -e $TARGET_DIR/ldlinux.c32 ]; then
+	cd $TARGET_DIR
+	ln -s ${RELEASE}/ubuntu-installer/amd64/ldlinux.c32
+	cd -
 fi
 
 if [ ! -f $TARGET_DIR/pxelinux.cfg/default ]; then
@@ -32,7 +40,7 @@ default install
 timeout 0
 LABEL install
         kernel ${RELEASE}/ubuntu-installer/amd64/linux
-        append vga=normal initrd=${RELEASE}/ubuntu-installer/amd64/initrd.gz locale=en_US.UTF-8 debian-installer/keymap=us
+        append vga=normal initrd=${RELEASE}/ubuntu-installer/amd64/initrd.gz locale=en_US.UTF-8 debian-installer/keymap=us pkgsel/install-language-support=false netcfg/dhcp_timeout=120 console-setup/layoutcode=us console-setup/ask_detect=false netcfg/choose_interface=enp0s8
 EOF
 
 fi
