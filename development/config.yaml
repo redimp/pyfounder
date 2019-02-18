@@ -1,34 +1,34 @@
 ---
+globals:
+
 hosts:
   example1:
+    interface: enp0s8
     mac: 00:d8:61:2d:6d:bb
     ip: 10.0.0.2
     class: workstation
 
-class:
+  example2:
+    interface: enp0s8
+    mac: 00:d8:61:2d:6d:bb
+    ip: 10.0.0.2
+    class: workstation
+
+classes:
   default: &default
     templates:
-      pxe: pxe/install-bionic
+      pxelinux.cfg: pxe/localhdd
+      pxelinux.cfg-install: pxe/install-bionic
       preseed.cfg: pressed.cfg/default
       early_command:
       late_command:
       first_boot:
     variables:
       apt-proxy: http://apt-cacher-ng:3142
+  # the class for all workstations
   workstation: &workstation
     <<: *default
     variables:
       test: test
-# gna:
-#   base: &base
-#     name: Everyone has same name
-# 
-#   foo: &foo
-#     <<: *base
-#     age: 10
-# 
-#   bar: &bar
-#      <<: *base
-#      age: 20
 
 # vim: set ts=2 sts=2 sw=2 et:
