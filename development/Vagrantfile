@@ -1,18 +1,52 @@
 # -*- mode: ruby -*-
-# vi: set ft=ruby :
+# vi: set ft=ruby sts=2 ts=2 et sw=2 :
+
+# to make sure the server node is created before the other nodes, we
+# have to force a --no-parallel execution.
+ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 
 # Vagrant multi-machine sample setup
 
 Vagrant.configure("2") do |config|
   config.vm.define :server do |server|
-    server.vm.box = "hashicorp/precise64"
-    server.vm.network :private_network, ip: "10.0.0.10"
+    server.vm.box = "ubuntu/bionic64"
+    #server.vm.box = "mrlesmithjr/bionic64"
+    #server.vm.box = "hashicorp/precise64"
+    server.vm.network :private_network, ip: "10.0.10.10"
     server.vm.hostname = "server"
+    server.vm.provider :virtualbox do |vb|
+      # FIXME what does this mean?
+      vb.linked_clone = true
+      vb.memory = 256
+      vb.cpus = 2
+      vb.customize ['modifyvm', :id, '--cableconnected1', 'on']
+    end
+    server.vm.provision :shell, path: 'provision_server.sh'
   end
 
   config.vm.define :client do |client|
-    client.vm.box = "hashicorp/precise64"
-    client.vm.network :private_network, ip: "10.0.0.11"
+    client.vm.box = "c33s/empty"
+    client.vm.box_version = "0.1.0"
+    client.vm.network :private_network, mac: "800270000002", ip: "10.0.10.11", autoconfig: false
     client.vm.hostname = "client"
+    # no shared folders
+    client.vm.synced_folder '.', '/vagrant', disabled: true
+    client.vm.provider :virtualbox do |vb|
+      # let vagrant known that the guest does not have the guest additions nor a functional vboxsf
+      vb.check_guest_additions = false
+      vb.functional_vboxsf = false
+      # configure for PXE boot.
+      vb.customize ['modifyvm', :id, '--boot1', 'net']
+      vb.customize ['modifyvm', :id, '--boot2', 'disk']
+      vb.customize ['modifyvm', :id, '--biospxedebug', 'on']
+      vb.customize ['modifyvm', :id, '--cableconnected2', 'on']
+      vb.customize ['modifyvm', :id, '--nicbootprio2', '1']
+      # Must be an Intel card (as-of VB 5.1 we cannot Intel PXE boot from a virtio-net card).
+      vb.customize ['modifyvm', :id, "--nictype2", '82540EM'] 
+      vb.customize ['setextradata', :id, 'VBoxInternal/Devices/pcbios/0/Config/DmiSystemVendor', 'ins.uni-bonn.de']
+      vb.customize ["modifyvm", :id, "--usb", "on"]
+      vb.customize ["modifyvm", :id, "--usbehci", "off"]
+    end
+    # client end
   end
 end
