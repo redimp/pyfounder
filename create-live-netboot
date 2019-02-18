@@ -1,0 +1,113 @@
+#!/bin/bash
+
+set -e
+
+[ "${TARGET}" == "" ] && TARGET=/tmp/pyfounder-LIVE_BOOT
+[ "${TARGET_HOSTNAME}" == "" ] && TARGET_HOSTNAME=pyfounder
+ARCH=amd64
+PACKAGES=""
+
+sudo apt-get install -y \
+    debootstrap \
+    squashfs-tools \
+    mtools
+
+mkdir -p ${TARGET}
+
+test -f ${TARGET}/chroot/bin/bash || sudo debootstrap \
+    --arch=${ARCH} \
+    --variant=minbase \
+    stretch \
+    ${TARGET}/chroot \
+    http://ftp.de.debian.org/debian/
+
+
+mkdir -p ${TARGET}/chroot/tmp
+
+cat <<'EOF' >${TARGET}/chroot/tmp/rc.local
+#!/bin/sh
+
+# for DEVICE in `lsblk -o KNAME,FSTYPE | grep ext4 | awk '{ print $1 }'`; do
+# 	mkdir /mnt/$DEVICE
+# 	mount /dev/$DEVICE /mnt/$DEVICE
+# done
+
+dhclient -v
+
+exit 0
+EOF
+
+cat <<'EOF' >${TARGET}/chroot/tmp/setup.sh
+#/bin/bash
+set -x
+set -e
+apt-get update
+apt-get install --no-install-recommends -y linux-image-amd64 \
+    live-boot \
+    systemd-sysv
+apt-get install  --no-install-recommends -y lvm2 vim-tiny curl openssh-client net-tools \
+    isc-dhcp-client less rsync tar gzip parted iputils-ping nmap \
+    util-linux psmisc python2.7-minimal
+# apt-get install -y acpid mandb mc
+
+EOF
+echo "apt-get install -y locales ${PACKAGES}" >> ${TARGET}/chroot/tmp/setup.sh
+
+cat <<'EOF' >>${TARGET}/chroot/tmp/setup.sh
+echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
+locale-gen --purge en_US.UTF-8 UTF-8
+sed -i '/^ExecStart/c\ExecStart=-/sbin/agetty --noclear -a root %I $TERM' /lib/systemd/system/getty\@.service
+
+cp /tmp/rc.local /etc/rc.local
+chmod +x /etc/rc.local
+
+EOF
+
+echo "echo ${TARGET_HOSTNAME} > /etc/hostname" >> ${TARGET}/chroot/tmp/setup.sh
+
+chmod +x ${TARGET}/chroot/tmp/setup.sh
+
+sudo chroot ${TARGET}/chroot /tmp/setup.sh
+
+
+if [ "${ROOT_TEMPLATE}" != "" ] && [ -d ${ROOT_TEMPLATE} ]; then
+    (cd ${ROOT_TEMPLATE}; tar c .) | sudo tar xv -C ${TARGET}/chroot
+    sudo chown -R root:root ${TARGET}/chroot/root
+fi
+
+# copy chroot environment
+sudo rsync -aH --delete-after ${TARGET}/chroot/ ${TARGET}/chroot-final/
+# and clean up
+
+cat << 'EOF' >${TARGET}/chroot-final/tmp/clean.sh
+#!/bin/bash
+set -x -e
+export DEBIAN_FRONTEND=noninteractive
+apt-get -y remove locales
+apt-get -y clean
+apt-get -y autoclean
+apt-get -y autoremove
+rm -rf /var/cache/apt/*
+rm -rf /var/lib/apt/*
+EOF
+
+chmod +x ${TARGET}/chroot-final/tmp/clean.sh
+sudo chroot ${TARGET}/chroot-final /tmp/clean.sh
+
+exit 0
+
+mkdir -p ${TARGET}/image
+
+rm -f ${TARGET}/image/filesystem.squashfs
+
+sudo mksquashfs \
+    ${TARGET}/chroot-final \
+    ${TARGET}/image/filesystem.squashfs \
+    -e boot
+
+cp ${TARGET}/chroot/boot/vmlinuz-* \
+    ${TARGET}/image/vmlinuz && \
+cp ${TARGET}/chroot/boot/initrd.img-* \
+    ${TARGET}/image/initrd
+
+exit 0
