@@ -29,7 +29,7 @@ fi
 
 if [ ! -e $TARGET_DIR/ldlinux.c32 ]; then
 	cd $TARGET_DIR
-	ln -s ${RELEASE}/ubuntu-installer/amd64/ldlinux.c32
+	ln -s ${RELEASE}/ldlinux.c32
 	cd -
 fi
 
