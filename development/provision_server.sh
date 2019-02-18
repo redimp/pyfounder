@@ -1,10 +1,14 @@
 #!/bin/bash
 
-apt-get install -y dnsmasq
+set -e
+
+export DEBIAN_FRONTEND=noninteractive
 
 mkdir -p /var/lib
+test -L /var/lib/tftpboot || ln -s /vagrant/tftpboot /var/lib/tftpboot
 
-test -e /var/lib/tftpboot || ln -s /vagrant/tftpboot /var/lib/tftpboot
+apt-get update -y
+apt-get install -y dnsmasq
 
 IP=10.0.10.10
 
@@ -38,7 +42,7 @@ systemctl disable systemd-resolved
 systemctl stop systemd-resolved
 
 # update /etc/resolv.conf
-cat << EOF > /etc/resolv.conf
+cat << EOF >/etc/resolv.conf
 nameserver 127.0.0.1
 nameserver 8.8.8.8
 EOF
@@ -46,8 +50,7 @@ EOF
 systemctl restart dnsmasq.service
 
 # apt-cacher
-
-apt-get install apt-cacher-ng
+apt-get install -y apt-cacher-ng
 
 OUTER_IF=enp0s3
 INNER_IF=enp0s8
