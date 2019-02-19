@@ -1,0 +1,6 @@
+download/*
+tftpboot/bionic
+tftpboot/ldlinux.c32
+tftpboot/pxelinux.0
+tftpboot/pyfounder-discovery
+
