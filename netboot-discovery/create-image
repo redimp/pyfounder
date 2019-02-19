@@ -7,7 +7,7 @@ set -e
 [ "${IMAGE_TARGET_DIR}" == "" ] && IMAGE_TARGET_DIR=$PWD/image
 [ "${ARCH}" == "" ] && ARCH=amd64
 
-test -f scripts/setup.sh || { echo "Error: scripts/setup.sh not found."; exit 1 }
+test -f scripts/setup.sh || { echo "Error: scripts/setup.sh not found."; exit 1; }
 
 # install basic tools necessary to set up a debian system
 sudo apt-get install -y \
@@ -32,7 +32,7 @@ sudo cp -a ./scripts/* ${TARGET}/chroot/scripts/
 # set hostname
 sudo sh -c "echo ${TARGET_HOSTNAME} > ${TARGET}/chroot/etc/hostname"
 # run setup
-sudo chroot ${TARGET}/chroot /tmp/setup.sh
+sudo chroot ${TARGET}/chroot /scripts/setup.sh
 
 if [ "${ROOT_TEMPLATE}" != "" ] && [ -d ${ROOT_TEMPLATE} ]; then
     (cd ${ROOT_TEMPLATE}; tar c .) | sudo tar xv -C ${TARGET}/chroot
@@ -60,9 +60,16 @@ cp ${TARGET}/chroot/boot/initrd.img-* \
 # recreate squashfs
 rm -f ${IMAGE_TARGET_DIR}/filesystem.squashfs
 
+T=`mktemp -d`
+mkdir -p $T
+
 sudo mksquashfs \
     ${TARGET}/chroot-final \
-    ${IMAGE_TARGET_DIR}/filesystem.squashfs \
+    $T/filesystem.squashfs \
     -e boot
+
+cp  ${T}/filesystem.squashfs ${IMAGE_TARGET_DIR}/filesystem.squashfs
+
+sudo rm -rf ${T}
 
 exit 0

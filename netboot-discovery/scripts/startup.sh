@@ -8,4 +8,4 @@
 
 
 # TODO check if a specific interface is set via /proc/cmdline
-dhclient -v
+#dhclient -v
