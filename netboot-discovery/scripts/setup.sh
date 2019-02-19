@@ -31,7 +31,7 @@ chmod +x /etc/rc.local
 
 # see https://raymii.org/s/tutorials/Run_software_on_tty1_console_instead_of_login_getty.html
 
-mkdir /etc/systemd/system/getty@tty1.service.d/
+mkdir -p /etc/systemd/system/getty@tty1.service.d/
 
 cat << EOF >/etc/systemd/system/getty@tty1.service.d/override.conf
 [Service]
