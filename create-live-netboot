@@ -32,6 +32,9 @@ cat <<'EOF' >${TARGET}/chroot/tmp/rc.local
 # 	mount /dev/$DEVICE /mnt/$DEVICE
 # done
 
+/bin/rm /etc/ssh/ssh_host_*
+dpkg-reconfigure openssh-server
+
 dhclient -v
 
 exit 0
@@ -47,8 +50,12 @@ apt-get install --no-install-recommends -y linux-image-amd64 \
     systemd-sysv
 apt-get install  --no-install-recommends -y lvm2 vim-tiny curl openssh-client net-tools \
     isc-dhcp-client less rsync tar gzip parted iputils-ping nmap \
-    util-linux psmisc python2.7-minimal
+    util-linux psmisc python3-minimal python3-requests python3-psutil python3-urwid
 # apt-get install -y acpid mandb mc
+
+if ! test -e /usr/bin/vim && test -e /usr/bin/vim.tiny; then
+    ln -s /usr/bin/vim.tiny /usr/bin/vim
+fi
 
 EOF
 echo "apt-get install -y locales ${PACKAGES}" >> ${TARGET}/chroot/tmp/setup.sh
@@ -93,8 +100,6 @@ EOF
 
 chmod +x ${TARGET}/chroot-final/tmp/clean.sh
 sudo chroot ${TARGET}/chroot-final /tmp/clean.sh
-
-exit 0
 
 mkdir -p ${TARGET}/image
 
