@@ -4,8 +4,10 @@ set -e
 
 [ "${TARGET}" == "" ] && TARGET=/tmp/pyfounder-LIVE_BOOT
 [ "${TARGET_HOSTNAME}" == "" ] && TARGET_HOSTNAME=pyfounder
-
+[ "${IMAGE_TARGET_DIR}" == "" ] && IMAGE_TARGET_DIR=$PWD/image
 [ "${ARCH}" == "" ] && ARCH=amd64
+
+test -f scripts/setup.sh || { echo "Error: scripts/setup.sh not found."; exit 1 }
 
 # install basic tools necessary to set up a debian system
 sudo apt-get install -y \
@@ -44,21 +46,23 @@ chmod +x ${TARGET}/chroot-final/scripts/clean.sh
 sudo chroot ${TARGET}/chroot-final /scripts/clean.sh
 
 # create image
-mkdir -p ${TARGET}/image
+mkdir -p ${IMAGE_TARGET_DIR}
 
 # copy kernel and initrd
 cp ${TARGET}/chroot/boot/vmlinuz-* \
-    ${TARGET}/image/vmlinuz && \
+    ${IMAGE_TARGET_DIR}/vmlinuz && \
 cp ${TARGET}/chroot/boot/initrd.img-* \
-    ${TARGET}/image/initrd
+    ${IMAGE_TARGET_DIR}/initrd
+
 # TODO remove vmlinuz and initrd from chroot-final to free space?
+#      or even everything in /boot?
 
 # recreate squashfs
-rm -f ${TARGET}/image/filesystem.squashfs
+rm -f ${IMAGE_TARGET_DIR}/filesystem.squashfs
 
 sudo mksquashfs \
     ${TARGET}/chroot-final \
-    ${TARGET}/image/filesystem.squashfs \
+    ${IMAGE_TARGET_DIR}/filesystem.squashfs \
     -e boot
 
 exit 0
