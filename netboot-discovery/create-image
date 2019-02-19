@@ -1,0 +1,64 @@
+#!/bin/bash
+
+set -e
+
+[ "${TARGET}" == "" ] && TARGET=/tmp/pyfounder-LIVE_BOOT
+[ "${TARGET_HOSTNAME}" == "" ] && TARGET_HOSTNAME=pyfounder
+
+[ "${ARCH}" == "" ] && ARCH=amd64
+
+# install basic tools necessary to set up a debian system
+sudo apt-get install -y \
+    debootstrap \
+    squashfs-tools
+
+# create target directory
+mkdir -p ${TARGET}
+
+# set up baisc target system
+test -f ${TARGET}/chroot/bin/bash || sudo debootstrap \
+    --arch=${ARCH} \
+    --variant=minbase \
+    stretch \
+    ${TARGET}/chroot \
+    http://ftp.de.debian.org/debian/
+
+
+sudo mkdir -p ${TARGET}/chroot/scripts
+sudo cp -a ./scripts/* ${TARGET}/chroot/scripts/
+
+# set hostname
+sudo sh -c "echo ${TARGET_HOSTNAME} > ${TARGET}/chroot/etc/hostname"
+# run setup
+sudo chroot ${TARGET}/chroot /tmp/setup.sh
+
+if [ "${ROOT_TEMPLATE}" != "" ] && [ -d ${ROOT_TEMPLATE} ]; then
+    (cd ${ROOT_TEMPLATE}; tar c .) | sudo tar xv -C ${TARGET}/chroot
+    sudo chown -R root:root ${TARGET}/chroot/root
+fi
+
+# copy chroot environment
+sudo rsync -aH --delete-after ${TARGET}/chroot/ ${TARGET}/chroot-final/
+# and clean up
+chmod +x ${TARGET}/chroot-final/scripts/clean.sh
+sudo chroot ${TARGET}/chroot-final /scripts/clean.sh
+
+# create image
+mkdir -p ${TARGET}/image
+
+# copy kernel and initrd
+cp ${TARGET}/chroot/boot/vmlinuz-* \
+    ${TARGET}/image/vmlinuz && \
+cp ${TARGET}/chroot/boot/initrd.img-* \
+    ${TARGET}/image/initrd
+# TODO remove vmlinuz and initrd from chroot-final to free space?
+
+# recreate squashfs
+rm -f ${TARGET}/image/filesystem.squashfs
+
+sudo mksquashfs \
+    ${TARGET}/chroot-final \
+    ${TARGET}/image/filesystem.squashfs \
+    -e boot
+
+exit 0
