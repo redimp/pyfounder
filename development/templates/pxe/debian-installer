@@ -1,0 +1,5 @@
+default install
+timeout 0
+LABEL install
+        kernel bionic/ubuntu-installer/amd64/linux
+        append vga=normal initrd=bionic/ubuntu-installer/amd64/initrd.gz locale=en_US.UTF-8 debian-installer/keymap=us pkgsel/install-language-support=false netcfg/dhcp_timeout=120 console-setup/layoutcode=us console-setup/ask_detect=false netcfg/choose_interface=enp0s8
