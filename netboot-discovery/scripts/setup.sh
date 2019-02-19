@@ -28,3 +28,15 @@ EOF
 
 cp /tmp/rc.local /etc/rc.local
 chmod +x /etc/rc.local
+
+# see https://raymii.org/s/tutorials/Run_software_on_tty1_console_instead_of_login_getty.html
+
+mkdir /etc/systemd/system/getty@tty1.service.d/
+
+cat << EOF >/etc/systemd/system/getty@tty1.service.d/override.conf
+[Service]
+ExecStart=
+ExecStart=-/scripts/pyfounder-discover
+StandardInput=tty
+StandardOutput=tty
+EOF
