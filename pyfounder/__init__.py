@@ -1,11 +1,12 @@
 import os
 from flask import Flask
+import flask.helpers
 
 app = Flask(__name__)
 app.config.from_object('pyfounder.default_settings')
 app.config.from_envvar('PYFOUNDER_SETTINGS')
 
-if not app.debug:
+if not flask.helpers.get_debug_flag():
     import logging
     from logging.handlers import TimedRotatingFileHandler
     # https://docs.python.org/3.6/library/logging.handlers.html#timedrotatingfilehandler

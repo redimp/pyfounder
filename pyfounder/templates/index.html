@@ -2,10 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
+{% block title %}
     <title>pyfounder</title>
+{% endblock %}
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   </head>
   <body>
-    Welcome to pyfounder
+{% block body %}
+Welcome to <tt>pyfounder</tt>.
+{% endblock %}
   </body>
 </html>
+{# vim: set et ts=8 sts=4 sw=4 ai: #}

@@ -1,0 +1,15 @@
+{%block body%}
+<table>
+{% for name, value in settings.items() %}
+<tr>
+<th>{{name}}</th>
+{%if value[0] %}
+<td>{{value[0]}}</td>
+{%else%}
+<td>Error: {{value[1]}}</td>
+{%endif%}
+</tr>
+{% endfor %}
+</table>
+{%endblock%}
+{# vim: set et ts=8 sts=4 sw=4 ai: #}
