@@ -27,3 +27,14 @@ def get_hosts_yaml():
         raise ConfigException("File {} not found.".format(p))
     if not os.access(p, os.R_OK):
         raise ConfigException("File {} is not readable.".format(p))
+
+def get_template_directory():
+    from pyfounder import app
+    p = app.config['PXECFG_DIRECTORY']
+    if not len(p)>0:
+        raise ConfigException("Not configured.".format(p))
+    if not os.path.isdir(p):
+        raise ConfigException("Directory {} not found.".format(p))
+    if not os.access(p, os.W_OK):
+        raise ConfigException("Directory {} is not writeable.".format(p))
+    return p

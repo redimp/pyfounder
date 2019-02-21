@@ -25,6 +25,10 @@ def config():
         settings['PYFOUNDER_HOSTS'] = (helper.get_hosts_yaml(), None)
     except helper.ConfigException as e:
         settings['PYFOUNDER_HOSTS'] = (None, "{}".format(e))
+    try:
+        settings['PYFOUNDER_TEMPLATES'] = (helper.get_template_directory(), None)
+    except helper.ConfigException as e:
+        settings['PYFOUNDER_TEMPLATES'] = (None, "{}".format(e))
 
     # add settings to the config_arr
     return render_template('config.html', settings=settings)

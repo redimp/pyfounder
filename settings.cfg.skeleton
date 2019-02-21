@@ -4,10 +4,14 @@
 # e.g. SQLALCHEMY_DATABASE_URI='sqlite:///path/to/the/sqlite/database/file'
 SQLALCHEMY_DATABASE_URI = ''
 
+# pxelinux.cfg directory
+# e.g. PXECFG_DIRECTORY=/var/lib/tftpboot/pxelinux.cfg
+PXECFG_DIRECTORY = ''
+
 # the hosts file (reload via `founder reload`)
 # e.g. '/path/to/hosts.yaml'
 PYFOUNDER_HOSTS = ''
 
-# pxelinux.cfg directory
-# e.g. PXECFG_DIRECTORY=/var/lib/tftpboot/pxelinux.cfg
-PXECFG_DIRECTORY = ''
+# the template directory
+# e.g. '/path/to/pyfounder/templates'
+PYFOUNDER_TEMPLATES = ''
