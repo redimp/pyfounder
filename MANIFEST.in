@@ -1,0 +1,2 @@
+recursive-include pyfounder/templates *
+recursive-include pyfounder/static *
