@@ -15,7 +15,7 @@ run: venv
 	FLASK_APP=pyfounder PYFOUNDER_SETTINGS=../settings.cfg venv/bin/flask run
 
 test: venv
-	PYFOUNDER_SETTINGS=../settings.cfg venv/bin/python -m unittest discover -s tests
+	venv/bin/python -m unittest discover -s tests
 
 sdist: venv test
 	venv/bin/python setup.py sdist
