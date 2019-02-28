@@ -4,8 +4,7 @@ import flask.helpers
 
 app = Flask(__name__)
 app.config.from_object('pyfounder.default_settings')
-if 'PYFOUNDER_SETTINGS' in os.environ:
-    app.config.from_envvar('PYFOUNDER_SETTINGS')
+app.config.from_envvar('PYFOUNDER_SETTINGS', silent=True)
 
 if not flask.helpers.get_debug_flag():
     import logging
