@@ -77,3 +77,24 @@ def mkdir_p(path):
             pass
         else:
             raise
+
+def configured_template(template_file, cfg={}):
+    # load the jinja stuff
+    from jinja2 import FileSystemLoader, Environment
+    from jinja2.exceptions import TemplateNotFound
+    # create context
+    context = cfg
+    for key, value in cfg['variables'].items():
+        context[key] = value
+    # FIXME: should env be global?
+    env = Environment(
+            loader=FileSystemLoader(get_template_directory()))
+    try:
+        # load template
+        template = env.get_template(template_file)
+    except TemplateNotFound as e:
+        abort(404, "Template {} not found.".format(template_file))
+    # render
+    rendered_content = template.render(**context)
+    return rendered_content
+
