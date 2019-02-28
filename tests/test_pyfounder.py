@@ -1,25 +1,18 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# vim: set et ts=8 sts=4 sw=4 ai fenc=utf-8:
+
 import os
 import unittest
 import tempfile
 
 import pyfounder
+from pyfounder.helper import mkdir_p
 
-def mkdir_p(path):
-    try:
-        os.makedirs(path)
-    except OSError as exc:  # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else:
-            raise
-
-
-class PyfounderTestCase(unittest.TestCase):
-
-    def setUp(self):
+class TestApp(object):
+    def __init__(self):
         self.app = pyfounder.app
-        self.test_client = self.app.test_client()
+        self._test_client = self.app.test_client()
         self.tempdir = tempfile.TemporaryDirectory()
         self.app.config['SERVER_NAME'] = 'localhost.localdomain'
         self.app.config['PXECFG_DIRECTORY'] = os.path.join(self.tempdir.name,'pxelinux.cfg')
@@ -28,10 +21,17 @@ class PyfounderTestCase(unittest.TestCase):
         self.app.config['PYFOUNDER_TEMPLATES'] = os.path.join(self.tempdir.name,'templates')
         mkdir_p(self.app.config['PYFOUNDER_TEMPLATES'])
 
-
-
-    def tearDown(self):
+    def __del__(self):
         self.tempdir.cleanup()
+
+    def test_client(self):
+        return self._test_client
+
+class PyfounderTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.app = TestApp()
+        self.test_client = self.app.test_client()
 
     def test_config(self):
         rv = self.test_client.get('/config')

@@ -3,6 +3,7 @@
 # vim: set et ts=8 sts=4 sw=4 ai fenc=utf-8:
 
 import os
+import errno
 import yaml
 
 class ConfigException(Exception):
@@ -67,3 +68,12 @@ def load_hosts_config(filename=None):
 def host_config(hostname):
     hosts = load_hosts_config()
     return hosts[hostname]
+
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
