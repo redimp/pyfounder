@@ -6,6 +6,8 @@ app = Flask(__name__)
 app.config.from_object('pyfounder.default_settings')
 app.config.from_envvar('PYFOUNDER_SETTINGS', silent=True)
 
+from pyfounder import db
+
 if not flask.helpers.get_debug_flag():
     import logging
     from logging.handlers import TimedRotatingFileHandler
@@ -14,5 +16,6 @@ if not flask.helpers.get_debug_flag():
     file_handler.setLevel(logging.WARNING)
     file_handler.setFormatter(logging.Formatter('<%(asctime)s> <%(levelname)s> %(message)s'))
     app.logger.addHandler(file_handler)
+
 
 import pyfounder.views

@@ -7,13 +7,16 @@ from pprint import pformat
 from flask import render_template, Response, abort
 
 from pyfounder import app
+from pyfounder import models
 from pyfounder import helper
+
 
 @app.route('/')
 def index():
     return config()
     #app.logger.warning('sample message')
     return render_template('index.html')
+
 
 @app.route('/config')
 def config():
@@ -28,7 +31,8 @@ def config():
     except helper.ConfigException as e:
         settings['PYFOUNDER_HOSTS'] = (None, "{}".format(e))
     try:
-        settings['PYFOUNDER_TEMPLATES'] = (helper.get_template_directory(), None)
+        settings['PYFOUNDER_TEMPLATES'] = (
+            helper.get_template_directory(), None)
     except helper.ConfigException as e:
         settings['PYFOUNDER_TEMPLATES'] = (None, "{}".format(e))
 
@@ -39,10 +43,11 @@ def config():
     # add settings to the config_arr
     return render_template('config.html', settings=settings, extra=extra)
 
+
 @app.route('/fetch/<string:hostname>')
 @app.route('/fetch/<string:hostname>/')
 @app.route('/fetch/<string:hostname>/<string:template_name>')
-def fetch(hostname,template_name=None):
+def fetch(hostname, template_name=None):
     try:
         cfg = helper.host_config(hostname)
     except ValueError as e:
@@ -56,7 +61,7 @@ def fetch(hostname,template_name=None):
         template_file = cfg['templates'][template_name]
     except KeyError as e:
         abort(404, "Template {} not configured for host {}.".format(
-            template_name,hostname))
+            template_name, hostname))
     rendered_content = helper.configured_template(template_file,
-            cfg)
+                                                  cfg)
     return Response(rendered_content, mimetype='text/plain')

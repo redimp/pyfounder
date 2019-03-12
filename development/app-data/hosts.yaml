@@ -4,8 +4,8 @@ globals:
 hosts:
   example1:
     interface: enp0s8
-    mac: 00:d8:61:2d:6d:bb
-    ip: 10.0.0.2
+    mac: 00:d8:61:2d:6d:aa
+    ip: 10.0.0.1
     class: workstation
 
   example2:
