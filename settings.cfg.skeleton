@@ -15,3 +15,6 @@ PYFOUNDER_HOSTS = ''
 # the template directory
 # e.g. '/path/to/pyfounder/templates'
 PYFOUNDER_TEMPLATES = ''
+
+# the public ip where pyfounder is running
+PYFOUNDER_IP = ''
