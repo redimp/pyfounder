@@ -1,3 +1,68 @@
 #!/usr/bin/env python3
 
-input("[ENTER]")
+import sys
+import os
+import re
+import requests
+
+def pyfounder_from_cmdline_or_env():
+    try:
+        pyfounder_server = os.environ["PYFOUNDER_SERVER"]
+    except KeyError:
+        pyfounder_server = None
+    else:
+        return pyfounder_server
+
+    try:
+        with open('/proc/cmdline','r') as f:
+            cmdline = f.read()
+    except:
+        cmdline = ''
+    try:
+        pyfounder_server = re.findall("PYFOUNDER_SERVER=(\S+)",cmdline)[0]
+    except IndexError:
+        return None
+    return pyfounder_server
+
+def fix_url(url):
+    if url is None or len(url)<1:
+        return url
+    return url.rstrip('/')
+
+if __name__ == "__main__":
+    fetch_failed = False
+    url = pyfounder_from_cmdline_or_env()
+    while True:
+        # search for pyfounder server
+        if fetch_failed or url is None:
+            # prompt user
+            if url is not None:
+                url = input("Url [{}]:".format(url)) or url
+            else:
+                url = input("Url:") or None
+            if not url or url is None:
+                print("Please enter an URL to the pyfounder server!")
+                continue
+        url = fix_url(url)
+        # check if there is an pyfounder behind the url
+        try:
+            r = requests.get("{}/version".format(url))
+            if re.match("pyfounder \d+\.\d+.*", r.text):
+                print("{} connected at {}".format(r.text, r.url))
+                break
+        except:
+            print("Error: Failed to connect to {}".format(url))
+            # TODO more verbose
+            fetch_failed = True
+    # url is set and a pyfounder server replied.
+    # fetch the discovery script
+    r = requests.get("{}/fetch-discovery".format(url))
+    filename = "./pyfounder-discovery-tool.py"
+    with open(filename, 'w') as f:
+        f.write(r.text)
+    # execute script
+    from subprocess import call
+    sts = call("/usr/bin/env python {} {}".format(filename, url), shell=True)
+
+
+# vim: set ts=8 sts=2 sw=2 et ai"

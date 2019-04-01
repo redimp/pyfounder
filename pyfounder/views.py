@@ -9,6 +9,7 @@ from flask import render_template, Response, abort
 from pyfounder import app
 from pyfounder import models
 from pyfounder import helper
+from pyfounder import __version__
 
 
 @app.route('/')
@@ -16,6 +17,11 @@ def index():
     return config()
     #app.logger.warning('sample message')
     return render_template('index.html')
+
+@app.route('/version')
+def version():
+    content = "pyfounder {}".format(__version__)
+    return Response(content, mimetype='text/plain')
 
 
 @app.route('/config')
@@ -65,3 +71,13 @@ def fetch(hostname, template_name=None):
     rendered_content = helper.configured_template(template_file,
                                                   cfg)
     return Response(rendered_content, mimetype='text/plain')
+
+@app.route('/fetch-discovery')
+def fetch_discovery():
+    # TODO log
+    try:
+        with open(app.config['PYFOUNDER_DISCOVERY_SCRIPT']) as f:
+            content = f.read()
+    except:
+        abort(500)
+    return Response(content, mimetype='text/plain')
