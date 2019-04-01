@@ -61,8 +61,9 @@ if __name__ == "__main__":
     with open(filename, 'w') as f:
         f.write(r.text)
     # execute script
-    from subprocess import call
-    sts = call("/usr/bin/env python {} {}".format(filename, url), shell=True)
-
+    from subprocess import getstatusoutput
+    status, output = getstatusoutput("/usr/bin/env python {}".format(filename))
+    print(status)
+    print(output)
 
 # vim: set ts=8 sts=2 sw=2 et ai"
