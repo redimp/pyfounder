@@ -49,6 +49,14 @@ def get_mac(interface):
         mac = "00:00:00:00:00:00"
     return mac[0:17]
 
+def get_ip(interface):
+    status, output = getstatusoutput("ip addr show dev {}".format(device))
+    try:
+        ip = re.findall("inet ([0-9\.])",output,re.MULTILINE)[0]
+    except:
+        ip = '?'
+    return ip
+
 def get_primary_network_interface():
     # ip route list | grep default | ...
     status, output = getstatusoutput("ip route list | grep default")
@@ -61,13 +69,15 @@ def ram_bytes():
     return ram_kbytes() * 1024
 
 def lsblk():
-    status, output = getstatusoutput("lsblk --raw -n --output NAME,SIZE,TYPE | grep 'disk$'")
+    status, output = getstatusoutput("lsblk --raw -n --output NAME,SIZE,ROTA,TYPE | grep 'disk$'")
     # parse output
     data = {}
     try:
         for line in output.splitlines():
             col = line.split()
-            data[col[0]]=col[1]
+            ssdhdd = 'hdd'
+            if col[2] == '0': ssdhdd = 'ssd'
+            data[col[0]]=[col[1],ssdhdd]
     except:
         return None
 
@@ -85,18 +95,26 @@ def lspci():
         return '?'
     return output
 
+def serialnumber():
+    status, output = getstatusoutput('dmidecode -t 1 | grep "Serial Number"')
+    if status != 0:
+        return '?'
+    serial = re.findall("Serial Number:\s*([^\s]+)", output)[0]
+    return serial
 
 data = {}
-data["cpu_model"] = cpu_model()
-data["ram_bytes"] = ram_bytes()
-data["mac"]       = get_mac(get_primary_network_interface())
-data["lspci"]     = lspci()
+data["cpu_model"]     = cpu_model()
+data["ram_bytes"]     = ram_bytes()
+data["mac"]           = get_mac(get_primary_network_interface())
+data["lspci"]         = lspci()
+data["serialnumber"]  = serialnumber()
 # disk info
 _lsblk = lsblk()
-data["lsblk"]     = _lsblk or '?'
+data["lsblk"]         = _lsblk or '?'
 # sfdisk partition info
-data['sfdisk']    = {}
+data['sfdisk']        = {}
 if _lsblk is not None:
     for disk in _lsblk.keys():
         data['sfdisk'][disk] = sfdisk(disk)
+# print data as yaml
 print(dump(data, Dumper=Dumper))

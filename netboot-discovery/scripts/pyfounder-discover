@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import time
 import os
 import re
 import requests
@@ -29,6 +30,18 @@ def fix_url(url):
         return url
     return url.rstrip('/')
 
+def run_discovery(url):
+    # fetch the discovery script
+    r = requests.get("{}/fetch-discovery".format(url))
+    filename = "./pyfounder-discovery-tool.py"
+    with open(filename, 'w') as f:
+        f.write(r.text)
+    # execute script
+    from subprocess import getstatusoutput
+    status, output = getstatusoutput("/usr/bin/env python {}".format(filename))
+    r = requests.post("{}/report-discovery".format(url), data={'data':output})
+    return r.text
+
 if __name__ == "__main__":
     fetch_failed = False
     url = pyfounder_from_cmdline_or_env()
@@ -55,15 +68,21 @@ if __name__ == "__main__":
             # TODO more verbose
             fetch_failed = True
     # url is set and a pyfounder server replied.
-    # fetch the discovery script
-    r = requests.get("{}/fetch-discovery".format(url))
-    filename = "./pyfounder-discovery-tool.py"
-    with open(filename, 'w') as f:
-        f.write(r.text)
-    # execute script
-    from subprocess import getstatusoutput
-    status, output = getstatusoutput("/usr/bin/env python {}".format(filename))
-    print(status)
-    print(output)
+    id = run_discovery(url)
+    print(id)
+    try:
+        while True:
+            r = requests.get("{}/discovery-remote-control/{}".format(url,id))
+            remote_control = r.text
+            if remote_control == "wait":
+                time.sleep(10)
+            elif remote_control == "discover":
+                id = run_discovery(url)
+            elif remote_control == "quit":
+                break
+    except KeyboardInterrupt:
+        pass
+
+
 
 # vim: set ts=8 sts=2 sw=2 et ai"

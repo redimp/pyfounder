@@ -4,7 +4,7 @@
 
 from pprint import pformat
 
-from flask import render_template, Response, abort
+from flask import render_template, Response, abort, request
 
 from pyfounder import app
 from pyfounder import models
@@ -71,6 +71,19 @@ def fetch(hostname, template_name=None):
     rendered_content = helper.configured_template(template_file,
                                                   cfg)
     return Response(rendered_content, mimetype='text/plain')
+
+@app.route('/report-discovery', methods=['POST','GET'])
+def report_discovery():
+    data = request.form.get('data')
+    # TODO store data
+    print(data)
+    # TODO return id
+    return '42'
+
+@app.route('/discovery-remote-control/<id>')
+def discovery_remote_control(id):
+    # TODO check status and update status
+    return 'quit'
 
 @app.route('/fetch-discovery')
 def fetch_discovery():

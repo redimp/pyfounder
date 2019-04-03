@@ -18,5 +18,5 @@ class DiscoveryData(db.Model):
     mac = db.Column(db.String(64))
     cpu_family = db.Column(db.String(64))
     ram_bytes = db.Column(db.Integer)
-    vendor_tag = db.Column(db.String(128))
+    serialnumber = db.Column(db.String(128))
     yaml = db.Column(db.Text)
