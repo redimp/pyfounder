@@ -7,10 +7,17 @@ from pprint import pformat
 from flask import render_template, Response, abort, request
 
 from pyfounder import app
+from pyfounder.models import db
 from pyfounder import models
 from pyfounder import helper
 from pyfounder import __version__
+from datetime import datetime
 
+from yaml import load, dump, add_representer
+try:
+        from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+        from yaml import Loader, Dumper
 
 @app.route('/')
 def index():
@@ -72,11 +79,24 @@ def fetch(hostname, template_name=None):
                                                   cfg)
     return Response(rendered_content, mimetype='text/plain')
 
-@app.route('/report-discovery', methods=['POST','GET'])
-def report_discovery():
-    data = request.form.get('data')
+@app.route('/discovery-report/', methods=['POST','GET'])
+@app.route('/discovery-report', methods=['POST','GET'])
+def discovery_report():
+    _data = request.form.get('data')
+    data = load(_data, Loader=Loader)
     # TODO store data
-    print(data)
+    print(data['mac'])
+    host = models.DiscoveredHost.query.filter_by(mac=data['mac']).first()
+    print(host)
+    if host is not None:
+        # TODO log
+        pass
+    else:
+        # create host
+        host = models.DiscoveredHost(mac=data['mac'], date=datetime.utcnow(), yaml=_data)
+        db.session.add(host)
+        db.session.commit()
+
     # TODO return id
     return '42'
 

@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 # vim: set et ts=8 sts=4 sw=4 ai fenc=utf-8:
 
-from pyfounder import db
-
+from flask_sqlalchemy import SQLAlchemy
+from pyfounder import app
+db = SQLAlchemy(app)
 
 class Host(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -12,7 +13,7 @@ class Host(db.Model):
     last_seen = db.Column(db.DateTime())
     is_installed = db.Column(db.Boolean())
 
-class DiscoveryData(db.Model):
+class DiscoveredHost(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime())
     mac = db.Column(db.String(64))
@@ -20,3 +21,6 @@ class DiscoveryData(db.Model):
     ram_bytes = db.Column(db.Integer)
     serialnumber = db.Column(db.String(128))
     yaml = db.Column(db.Text)
+
+db.create_all()
+

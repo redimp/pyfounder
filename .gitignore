@@ -86,3 +86,4 @@ ENV/
 dist/
 sdist/
 settings.cfg
+db.sqlite

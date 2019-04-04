@@ -8,7 +8,6 @@ import re
 
 from subprocess import getstatusoutput
 
-import json
 from yaml import load, dump, add_representer
 try:
         from yaml import CLoader as Loader, CDumper as Dumper
