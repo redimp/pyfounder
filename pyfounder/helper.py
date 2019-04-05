@@ -4,7 +4,12 @@
 
 import os
 import errno
+
 import yaml
+try:
+        from yaml import CLoader as yaml_Loader, CDumper as yaml_Dumper
+except ImportError:
+        from yaml import Loader as yaml_Loader, Dumper as yaml_Dumper
 
 class ConfigException(Exception):
     pass
@@ -45,7 +50,7 @@ def load_hosts_yaml(filename=None):
         filename = get_hosts_yaml()
     try:
         with open(filename, 'r') as f:
-            return yaml.load(f)
+            return yaml.load(f, Loader=yaml_Loader)
     except (yaml.MarkedYAMLError) as e:
         raise ConfigException("Unable to load {}: {}.".format(filename,e))
     except (IOError, yaml.YAMLError) as e:
