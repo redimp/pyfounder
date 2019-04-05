@@ -11,16 +11,40 @@ class Host(db.Model):
     name = db.Column(db.String(64))
     first_seen = db.Column(db.DateTime())
     last_seen = db.Column(db.DateTime())
-    is_installed = db.Column(db.Boolean())
-
-class DiscoveredHost(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.DateTime())
+    state = db.Column(db.String(255))
     mac = db.Column(db.String(64))
-    cpu_family = db.Column(db.String(64))
-    ram_bytes = db.Column(db.Integer)
     serialnumber = db.Column(db.String(128))
-    yaml = db.Column(db.Text)
+    cpu_model = db.Column(db.String(64))
+    ram_bytes = db.Column(db.Integer)
+    gpu = db.Column(db.String(128))
+    discovery_yaml = db.Column(db.Text)
+
+    def get_states(self):
+        if self.state is None:
+            return []
+        return self.state.split('|')
+
+    def has_state(self, state):
+        states = self.get_states()
+        return state in states
+
+    def add_state(self, state, *more_states):
+        states = self.get_states()
+        states.append(state)
+        if len(more_states):
+            states += more_states
+        self.state = "|".join(states)
+
+    def remove_state(self, state, *more_states):
+        states = self.get_states()
+        for s in [state] + list(more_states):
+            try:
+                states.remove(s)
+            except ValueError:
+                pass
+        self.state = "|".join(states)
+
+
 
 db.create_all()
 
