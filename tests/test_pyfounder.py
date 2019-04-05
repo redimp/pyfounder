@@ -69,12 +69,12 @@ class TestApp(object):
     def test_client(self):
         return self._test_client
 
-class PyfounderTestCase(unittest.TestCase):
-
+class PyfounderTestCaseBase(unittest.TestCase):
     def setUp(self):
         self.app = TestApp()
         self.test_client = self.app.test_client()
 
+class PyfounderTestCase(PyfounderTestCaseBase):
     def test_config(self):
         rv = self.test_client.get('/config')
         response = rv.data.decode()
