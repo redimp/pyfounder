@@ -8,6 +8,8 @@ import re
 
 from subprocess import getstatusoutput
 
+import json
+
 from yaml import load, dump, add_representer
 try:
         from yaml import CLoader as Loader, CDumper as Dumper
@@ -94,6 +96,18 @@ def lspci():
         return '?'
     return output
 
+def lshw():
+    status, output = getstatusoutput("lshw -json")
+    if status != 0:
+        return '?'
+    # during development, this is run as user, so remove the warnings
+    output = re.sub(r'(?m)^WARNING:.*\n?', '', output)
+    try:
+        data = json.loads(output)
+    except:
+        return '?'
+    return data
+
 def serialnumber():
     status, output = getstatusoutput('dmidecode -t 1 | grep "Serial Number"')
     if status != 0:
@@ -106,6 +120,7 @@ data["cpu_model"]     = cpu_model()
 data["ram_bytes"]     = ram_bytes()
 data["mac"]           = get_mac(get_primary_network_interface())
 data["lspci"]         = lspci()
+data["lshw"]          = lshw()
 data["serialnumber"]  = serialnumber()
 # disk info
 _lsblk = lsblk()

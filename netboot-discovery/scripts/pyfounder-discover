@@ -40,9 +40,12 @@ def run_discovery(url):
     # execute script
     from subprocess import getstatusoutput
     status, output = getstatusoutput("/usr/bin/env python {}".format(filename))
-    r = requests.post("{}/discovery-report".format(url), data={'data':output})
-    r.raise_for_status()
-    return r.text
+    if status == 0:
+        r = requests.post("{}/discovery-report".format(url), data={'data':output})
+        r.raise_for_status()
+        return r.text
+    print(output)
+    raise RuntimeError
 
 if __name__ == "__main__":
     fetch_failed = False
@@ -72,7 +75,6 @@ if __name__ == "__main__":
             fetch_failed = True
     # url is set and a pyfounder server replied.
     id = run_discovery(url)
-    print(id)
     try:
         while True:
             r = requests.get("{}/discovery-remote-control/{}".format(url,id))
