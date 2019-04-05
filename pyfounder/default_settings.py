@@ -5,7 +5,7 @@ import os
 
 DEBUG = False  # make sure DEBUG is off unless enabled explicitly otherwise
 LOG_DIR = '.'  # create log files in current working directory
-SQLALCHEMY_DATABASE_URI = ''
+SQLALCHEMY_DATABASE_URI = 'sqlite://'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 PXECFG_DIRECTORY = ''
 PYFOUNDER_HOSTS = ''
