@@ -12,6 +12,7 @@ from pyfounder import models
 from pyfounder import helper
 from pyfounder import __version__
 from datetime import datetime
+import json
 
 from yaml import load, dump, add_representer
 try:
@@ -83,27 +84,60 @@ def fetch(hostname, template_name=None):
 @app.route('/discovery-report', methods=['POST','GET'])
 def discovery_report():
     _data = request.form.get('data')
-    data = load(_data, Loader=Loader)
-    # TODO store data
-    print(data['mac'])
-    host = models.DiscoveredHost.query.filter_by(mac=data['mac']).first()
-    print(host)
-    if host is not None:
-        # TODO log
-        pass
-    else:
-        # create host
-        host = models.DiscoveredHost(mac=data['mac'], date=datetime.utcnow(), yaml=_data)
+    _error = request.form.get('error')
+    if _data is not None:
+        try:
+           data = load(_data, Loader=Loader)
+        except:
+            print(_data)
+            raise
+        # store data
+        #print(data)
+        host = models.Host.query.filter_by(mac=data['mac']).first()
+        if host is None:
+            app.logger.info('New Discovered Host: {}'.format(data['mac']))
+            # create host
+            host = models.Host(mac=data['mac'], first_seen=datetime.utcnow())
+        else:
+            app.logger.info('Updated Discovered Host: {}'.format(data['mac']))
+        # update host data
+        host.last_seen = datetime.utcnow()
+        host.serialnumber = data['serialnumber']
+        host.cpu_model = data['cpu_model']
+        host.ram_bytes = data['ram_bytes']
+        host.discovery_yaml = _data
+        host.add_state('discovered','not_installed')
+        # store in database
         db.session.add(host)
         db.session.commit()
+        host = models.Host.query.filter_by(mac=data['mac']).first()
+        return str(host.mac)
+    if _error is not None:
+        app.logger.warning('Discovery Error: {}'.format(_error))
+        # TODO add to database
+        pass
+    return ''
 
-    # TODO return id
-    return '42'
-
-@app.route('/discovery-remote-control/<id>')
-def discovery_remote_control(id):
+@app.route('/discovery-remote-control/<mac>')
+def discovery_remote_control(mac):
     # TODO check status and update status
-    return 'quit'
+    host = models.Host.query.filter_by(mac=mac).first()
+    if host is None or not host.has_state('discovered'):
+        # no discovery data found, ask client to discover
+        return 'discover'
+    # check if host is configured
+    hostname = helper.find_hostname_by_mac(mac)
+    if hostname is None:
+        return 'wait'
+    config = helper.host_config(hostname)
+    host.name = config['hostname']
+    host.last_seen = datetime.utcnow()
+    host.add_state('boot_into_install')
+    db.session.add(host)
+    db.session.commit()
+    app.logger.info('Reboot Host {} {} into install.'.format(host.name, host.mac))
+
+    return 'reboot'
 
 @app.route('/fetch-discovery')
 def fetch_discovery():

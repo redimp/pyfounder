@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 
+"""
+ python ../../pyfounder/pyfounder-discovery-tool.py >/dev/null && \ 
+ PYFOUND_SERVER=http://127.0.0.1:5000/ ./pyfounder-discover -d
+"""
+
 import sys
 import time
 import os
 import re
 import requests
+from subprocess import getstatusoutput
 
 def pyfounder_from_cmdline_or_env():
     try:
@@ -38,7 +44,6 @@ def run_discovery(url):
     with open(filename, 'w') as f:
         f.write(r.text)
     # execute script
-    from subprocess import getstatusoutput
     status, output = getstatusoutput("/usr/bin/env python {}".format(filename))
     if status == 0:
         r = requests.post("{}/discovery-report".format(url), data={'data':output})
@@ -48,6 +53,7 @@ def run_discovery(url):
     raise RuntimeError
 
 if __name__ == "__main__":
+    in_development = "-d" in sys.argv[1:]
     fetch_failed = False
     url = pyfounder_from_cmdline_or_env()
     while True:
@@ -80,13 +86,21 @@ if __name__ == "__main__":
             r = requests.get("{}/discovery-remote-control/{}".format(url,id))
             r.raise_for_status()
             remote_control = r.text
+            print(remote_control)
             if remote_control == "wait":
                 time.sleep(10)
             elif remote_control == "discover":
                 id = run_discovery(url)
             elif remote_control == "reboot":
                 # TODO log
-                status, output = getstatusoutput("reboot")
+                for i in range(10,0,-1):
+                    print("Will reboot in {} seconds ...".format(i))
+                    time.sleep(1)
+                if in_development:
+                    print("Quit instead of reboot, due to in_development.")
+                    break
+                else:
+                    status, output = getstatusoutput("reboot")
             elif remote_control == "quit":
                 break
     except KeyboardInterrupt:
