@@ -118,7 +118,8 @@ def serialnumber():
 data = {}
 data["cpu_model"]     = cpu_model()
 data["ram_bytes"]     = ram_bytes()
-data["mac"]           = get_mac(get_primary_network_interface())
+data["interface"]     = get_primary_network_interface()
+data["mac"]           = get_mac(data["interface"])
 data["lspci"]         = lspci()
 data["lshw"]          = lshw()
 data["serialnumber"]  = serialnumber()

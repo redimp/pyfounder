@@ -15,7 +15,7 @@ globals:
 hosts:
   example1:
     interface: enp0s8
-    mac: 00:d8:61:2d:6d:bb
+    mac: 00:11:22:33:44:55
     ip: 10.0.0.2
     class: workstation
 
@@ -74,7 +74,7 @@ class PyfounderTestCaseBase(unittest.TestCase):
         self.app = TestApp()
         self.test_client = self.app.test_client()
 
-class PyfounderTestCase(PyfounderTestCaseBase):
+class ConfigTest(PyfounderTestCaseBase):
     def test_config(self):
         rv = self.test_client.get('/config')
         response = rv.data.decode()
@@ -91,6 +91,28 @@ class PyfounderTestCase(PyfounderTestCaseBase):
         # test variable from inherited class
         self.assertIn('locale=en_US.UTF-8', response)
 
+class DiscoverTest(PyfounderTestCaseBase):
+    def test_version(self):
+        rv = self.test_client.get('/version')
+        response = rv.data.decode()
+        self.assertRegex(response, r'pyfounder \d+\.\d+.*')
+
+    def test_fetch_discovert(self):
+        rv = self.test_client.get('/fetch-discovery')
+        response = rv.data.decode()
+        self.assertIn("#!/usr/bin/env python3",response)
+        self.assertIn("print(dump(data, Dumper=Dumper))",response)
+
+    def test_discovery_report(self):
+        yaml = """cpu_model: testcpu
+interface: enp0s8
+mac: 00:11:22:33:44:55
+ram_bytes: '1024'
+serialnumber: '42'
+"""
+        rv = self.test_client.post('/discovery-report', data=dict(data=yaml))
+        response = rv.data.decode()
+        self.assertEqual(response, '00:11:22:33:44:55')
 
 if __name__ == '__main__':
     unittest.main()
