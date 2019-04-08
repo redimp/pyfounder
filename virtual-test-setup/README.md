@@ -36,3 +36,11 @@ sudo screen -r
 The pyfounder root directory is mounted into `/pyfounder` and installed using `pip install --editable`.
 
 The virtual-test-setup directory can be found in `/vagrant`. The config files `server-settings.cfg` and `server-hosts.yaml` can be edited on the host machine.
+
+# Uninstall the virtual test setup
+
+To stop the virtual machines and delete all data use
+
+```
+vagrant destroy
+```
