@@ -8,7 +8,7 @@ mkdir -p /var/lib
 test -L /var/lib/tftpboot || ln -s /vagrant/tftpboot /var/lib/tftpboot
 
 apt-get update -y
-apt-get install -y dnsmasq
+apt-get install -y dnsmasq screen make
 
 IP=10.0.10.10
 
@@ -41,7 +41,9 @@ EOF
 systemctl disable systemd-resolved
 systemctl stop systemd-resolved
 
-# update /etc/resolv.conf
+# delete resolf.conf
+rm -f /etc/resolv.conf
+# write /etc/resolv.conf
 cat << EOF >/etc/resolv.conf
 nameserver 127.0.0.1
 nameserver 8.8.8.8
@@ -50,7 +52,7 @@ EOF
 systemctl restart dnsmasq.service
 
 # apt-cacher
-apt-get install -y apt-cacher-ng
+apt-get install -y apt-cacher-ng python3 python3-virtualenv
 
 OUTER_IF=enp0s3
 INNER_IF=enp0s8
@@ -59,3 +61,27 @@ iptables -A FORWARD -o $OUTER_IF -i $INNER_IF -s 10.0.10.0/24 -m conntrack --cts
 iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT 
 iptables -t nat -A POSTROUTING -o $OUTER_IF -j MASQUERADE
 # iptables -A FORWARD -o $OUTER_IF -s 10.0.10.0/16 -m conntrack --ctstate NEW -j ACCEPT 
+
+# run screen -dmS pyfounder /vagrant/pyfounder_server.sh
+
+cp /vagrant/pyfounder_server.sh /pyfounder_server.sh
+
+cat <<EOF >/etc/systemd/system/screen-pyfounder.service
+[Unit]
+Description=Run pyfounder server in screen session
+ConditionPathExists=/pyfounder_server.sh
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/screen -dmS pyfounder /pyfounder_server.sh
+ExecStop=/usr/bin/screen -S pyfounder -X quit
+TimeoutSec=0
+StandardOutput=tty
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload
+systemctl enable screen-pyfounder.service
+systemctl start screen-pyfounder.service

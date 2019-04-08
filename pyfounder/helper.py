@@ -59,6 +59,8 @@ def load_hosts_yaml(filename=None):
 def load_hosts_config(filename=None):
     d = load_hosts_yaml(filename)
     hosts = {}
+    if 'hosts' not in d or d['hosts'] is None:
+        return {}
     for hostname, cfg in d['hosts'].items():
         if 'class' in cfg:
             if cfg['class'] in d['classes']:

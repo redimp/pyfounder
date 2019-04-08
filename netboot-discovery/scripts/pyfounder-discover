@@ -44,7 +44,7 @@ def run_discovery(url):
     with open(filename, 'w') as f:
         f.write(r.text)
     # execute script
-    status, output = getstatusoutput("/usr/bin/env python {}".format(filename))
+    status, output = getstatusoutput("/usr/bin/env python3 {}".format(filename))
     if status == 0:
         r = requests.post("{}/discovery-report".format(url), data={'data':output})
         r.raise_for_status()

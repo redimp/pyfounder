@@ -2,4 +2,4 @@ default pyfounder-discovery
 timeout 0
 LABEL pyfounder-discovery
         kernel pyfounder-discovery/vmlinuz
-        append initrd=pyfounder-discovery/initrd boot=live nomodeset fetch=tftp://10.0.10.10/pyfounder-discovery/filesystem.squashfs
+        append initrd=pyfounder-discovery/initrd boot=live nomodeset fetch=tftp://10.0.10.10/pyfounder-discovery/filesystem.squashfs PYFOUNDER_SERVER=http://10.0.10.10:5000/
