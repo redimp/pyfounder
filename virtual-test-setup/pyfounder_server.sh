@@ -19,7 +19,8 @@ done
 
 cd /pyfounder
 $PIP install -U -r requirements.txt
-$PYTHON setup.py develop
+#$PYTHON setup.py develop
+$PIP install -e .
 
 export FLASK_ENV=development
 export FLASK_DEBUG=True

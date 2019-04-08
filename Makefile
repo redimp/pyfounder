@@ -1,3 +1,5 @@
+ROOT_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+
 all: run
 
 clean:
@@ -6,7 +8,8 @@ clean:
 venv:
 	virtualenv --python=python3 venv
 #	venv/bin/pip install -r requirements.txt
-	venv/bin/python setup.py develop
+#	venv/bin/python setup.py develop
+	venv/bin/pip install -e $(ROOT_DIR)
 
 debug: venv
 	FLASK_ENV=development FLASK_DEBUG=True FLASK_APP=pyfounder PYFOUNDER_SETTINGS=../settings.cfg venv/bin/flask run
