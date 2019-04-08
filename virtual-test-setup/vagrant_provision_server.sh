@@ -8,7 +8,7 @@ mkdir -p /var/lib
 test -L /var/lib/tftpboot || ln -s /vagrant/tftpboot /var/lib/tftpboot
 
 apt-get update -y
-apt-get install -y dnsmasq screen make
+apt-get install -y dnsmasq screen make sqlite3
 
 IP=10.0.10.10
 

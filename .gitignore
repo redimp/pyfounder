@@ -87,3 +87,4 @@ dist/
 sdist/
 settings.cfg
 db.sqlite
+hosts.yaml
