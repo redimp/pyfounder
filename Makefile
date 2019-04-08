@@ -22,3 +22,6 @@ test: venv
 
 sdist: venv test
 	venv/bin/python setup.py sdist
+
+venv/bin/founder-complete.bash: venv pyfounder/cli.py
+	_FOUNDER_COMPLETE=source venv/bin/founder >venv/bin/founder-complete.bash; true
