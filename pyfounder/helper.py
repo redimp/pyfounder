@@ -14,6 +14,12 @@ except ImportError:
 class ConfigException(Exception):
     pass
 
+def yaml_load(str):
+    return yaml.load(str, Loader=yaml_Loader)
+
+def yaml_dump(data):
+    return yaml.dump(data, Dumper=yaml_Dumper)
+
 def get_pxecfg_directory():
     from pyfounder import app
     p = app.config['PXECFG_DIRECTORY']

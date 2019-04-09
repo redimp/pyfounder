@@ -27,5 +27,21 @@ class mkdir_p_Test(unittest.TestCase):
         # create a sub directory
         pyfounder.helper.mkdir_p(path_a_b)
 
+class yaml_Test(unittest.TestCase):
+    def test_yaml_load(self):
+        data = pyfounder.helper.yaml_load("")
+        self.assertIsNone(data)
+        data = pyfounder.helper.yaml_load("""
+a:
+    - b
+    - c
+        """)
+        self.assertEquals(data,{'a': ['b', 'c']})
+
+    def test_yaml_dump(self):
+        d = {'a': ['b', 'c']}
+        y = pyfounder.helper.yaml_dump(d)
+        self.assertEquals(d,pyfounder.helper.yaml_load(y))
+
 if __name__ == '__main__':
     unittest.main()
