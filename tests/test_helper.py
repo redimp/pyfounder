@@ -36,12 +36,12 @@ a:
     - b
     - c
         """)
-        self.assertEquals(data,{'a': ['b', 'c']})
+        self.assertEqual(data,{'a': ['b', 'c']})
 
     def test_yaml_dump(self):
         d = {'a': ['b', 'c']}
         y = pyfounder.helper.yaml_dump(d)
-        self.assertEquals(d,pyfounder.helper.yaml_load(y))
+        self.assertEqual(d,pyfounder.helper.yaml_load(y))
 
 if __name__ == '__main__':
     unittest.main()

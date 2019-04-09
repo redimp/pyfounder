@@ -118,3 +118,9 @@ def configured_template(template_file, cfg={}):
     rendered_content = template.render(**context)
     return rendered_content
 
+def row2dict(row):
+    d = {}
+    for column in row.__table__.columns:
+        d[column.name] = str(getattr(row, column.name))
+
+    return d

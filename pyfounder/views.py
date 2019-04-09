@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # vim: set et ts=8 sts=4 sw=4 ai fenc=utf-8:
 
-from pprint import pformat
+from pprint import pformat, pprint
 
 from flask import render_template, Response, abort, request
 
@@ -12,13 +12,6 @@ from pyfounder import models
 from pyfounder import helper
 from pyfounder import __version__
 from datetime import datetime
-import json
-
-from yaml import load, dump, add_representer
-try:
-        from yaml import CLoader as Loader, CDumper as Dumper
-except ImportError:
-        from yaml import Loader, Dumper
 
 @app.route('/')
 def index():
@@ -87,7 +80,7 @@ def discovery_report():
     _error = request.form.get('error')
     if _data is not None:
         try:
-           data = load(_data, Loader=Loader)
+           data = helper.yaml_load(_data)
         except:
             print(_data)
             raise
@@ -161,6 +154,8 @@ def api_hosts(pattern=None):
                     Host.name.ilike('%{}%'.format(pattern)) |
                     Host.mac.ilike('%{}%'.format(pattern))
                 )
-    print(query)
-    return "Ok"
+    data = list(query.all())
+    data = [helper.row2dict(x) for x in data]
+    yaml_str = helper.yaml_dump(data)
+    return Response(yaml_str, mimetype='text/plain')
 
