@@ -153,15 +153,14 @@ def fetch_discovery():
 @app.route('/api/hosts/')
 @app.route('/api/hosts/<pattern>')
 def api_hosts(pattern=None):
-    if pattern is None:
-        # collect all hosts
-        query = Host.query
-    else:
-        query = Host.query.filter(
+    # build the query
+    query = Host.query
+    if pattern is not None:
+        # extend the query
+        query = query.filter(
                     Host.name.ilike('%{}%'.format(pattern)) |
                     Host.mac.ilike('%{}%'.format(pattern))
                 )
     print(query)
-    print(query.all())
     return "Ok"
 
