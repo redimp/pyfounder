@@ -7,7 +7,7 @@ from pprint import pformat
 from flask import render_template, Response, abort, request
 
 from pyfounder import app
-from pyfounder.models import db
+from pyfounder.models import db, Host
 from pyfounder import models
 from pyfounder import helper
 from pyfounder import __version__
@@ -93,7 +93,7 @@ def discovery_report():
             raise
         # store data
         #print(data)
-        host = models.Host.query.filter_by(mac=data['mac']).first()
+        host = Host.query.filter_by(mac=data['mac']).first()
         if host is None:
             app.logger.info('New Discovered Host: {}'.format(data['mac']))
             # create host
@@ -148,3 +148,20 @@ def fetch_discovery():
     except:
         abort(500)
     return Response(content, mimetype='text/plain')
+
+@app.route('/api/hosts')
+@app.route('/api/hosts/')
+@app.route('/api/hosts/<pattern>')
+def api_hosts(pattern=None):
+    if pattern is None:
+        # collect all hosts
+        query = Host.query
+    else:
+        query = Host.query.filter(
+                    Host.name.ilike('%{}%'.format(pattern)) |
+                    Host.mac.ilike('%{}%'.format(pattern))
+                )
+    print(query)
+    print(query.all())
+    return "Ok"
+

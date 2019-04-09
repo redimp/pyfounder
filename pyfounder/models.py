@@ -19,6 +19,10 @@ class Host(db.Model):
     gpu = db.Column(db.String(128))
     discovery_yaml = db.Column(db.Text)
 
+    def __repr__(self):
+        return "<Host {} {} {}>".format(self.id, self.name or '?', self.mac or '?')
+
+
     def get_states(self):
         if self.state is None:
             return []
