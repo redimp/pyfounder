@@ -69,8 +69,8 @@ _host_default_data = {
     'ip':None,
     'interface':None,
     'class':None,
+    'states':[],
 }
-
 
 def load_hosts_config(filename=None):
     d = load_hosts_yaml(filename)
@@ -147,15 +147,17 @@ def empty_or_None(s):
     return False
 
 
-def config_host_data(_hostdata):
+def config_host_data(_hostdata, hosts_config=None):
     result = []
-    hosts_config = load_hosts_config()
+    if hosts_config is None:
+       hosts_config = load_hosts_config()
     for _host in _hostdata:
         host = dict(_host_default_data)
         host.update(_host)
         _hc = None
         if not empty_or_None(host['mac']):
-            _hc = find_hostname_by_mac(host['mac'],hosts_config)
+            _hn = find_hostname_by_mac(host['mac'],hosts_config)
+            _hc = hosts_config[_hn]
         if _hc is None and host['name'] in hosts_config:
             _hc = hosts_config[host['name']]
         if _hc is not None:

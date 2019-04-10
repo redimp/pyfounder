@@ -154,9 +154,14 @@ def api_hosts(pattern=None):
                     Host.name.ilike('{}'.format(pattern)) |
                     Host.mac.ilike('{}'.format(pattern))
                 )
+    hosts_data = helper.load_hosts_config()
     data = list(query.all())
+    hostnames_query = list(set([x.name for x in data]))
     data = [helper.row2dict(x) for x in data]
-    data = helper.config_host_data(data)
+    data = helper.config_host_data(data, hosts_data)
+    # complete data with hosts_data
+    for missing_host in [x for x in hosts_data.keys() if x not in hostnames_query]:
+        data.append(hosts_data[missing_host])
     yaml_str = helper.yaml_dump(data)
     return Response(yaml_str, mimetype='text/plain')
 
