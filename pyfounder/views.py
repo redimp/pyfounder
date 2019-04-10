@@ -151,11 +151,12 @@ def api_hosts(pattern=None):
     if pattern is not None:
         # extend the query
         query = query.filter(
-                    Host.name.ilike('%{}%'.format(pattern)) |
-                    Host.mac.ilike('%{}%'.format(pattern))
+                    Host.name.ilike('{}'.format(pattern)) |
+                    Host.mac.ilike('{}'.format(pattern))
                 )
     data = list(query.all())
     data = [helper.row2dict(x) for x in data]
+    data = helper.config_host_data(data)
     yaml_str = helper.yaml_dump(data)
     return Response(yaml_str, mimetype='text/plain')
 

@@ -4,6 +4,7 @@
 
 import os
 import errno
+import fnmatch
 
 import yaml
 try:
@@ -62,12 +63,23 @@ def load_hosts_yaml(filename=None):
     except (IOError, yaml.YAMLError) as e:
         raise ConfigException("Unable to load {}: {}.".format(filename,e))
 
+_host_default_data = {
+    'name':None,
+    'mac':None,
+    'ip':None,
+    'interface':None,
+    'class':None,
+}
+
+
 def load_hosts_config(filename=None):
     d = load_hosts_yaml(filename)
     hosts = {}
     if 'hosts' not in d or d['hosts'] is None:
         return {}
     for hostname, cfg in d['hosts'].items():
+        # set host default values
+        hosts[hostname] = _host_default_data
         if 'class' in cfg:
             if cfg['class'] in d['classes']:
                 hosts[hostname] = d['classes'][cfg['class']]
@@ -75,15 +87,17 @@ def load_hosts_config(filename=None):
             hosts[hostname][key] = value
         # that looks strange, but it necessary to get everything
         # in one place, when generating the templates
-        hosts[hostname]['hostname'] = hostname
+        hosts[hostname]['name'] = hostname
     return hosts
 
-def host_config(hostname):
-    hosts = load_hosts_config()
+def host_config(hostname, hosts):
+    if hosts is None:
+        hosts = load_hosts_config()
     return hosts[hostname]
 
-def find_hostname_by_mac(mac):
-    hosts = load_hosts_config()
+def find_hostname_by_mac(mac, hosts=None):
+    if hosts is None:
+        hosts = load_hosts_config()
     for name,config in hosts.items():
         if config['mac'] == mac:
             return name
@@ -121,6 +135,34 @@ def configured_template(template_file, cfg={}):
 def row2dict(row):
     d = {}
     for column in row.__table__.columns:
-        d[column.name] = str(getattr(row, column.name))
-
+        d[column.name] = getattr(row, column.name)
     return d
+
+
+def empty_or_None(s):
+    if s is None:
+        return True
+    if len(s.strip())<1:
+        return True
+    return False
+
+
+def config_host_data(_hostdata):
+    result = []
+    hosts_config = load_hosts_config()
+    for _host in _hostdata:
+        host = dict(_host_default_data)
+        host.update(_host)
+        _hc = None
+        if not empty_or_None(host['mac']):
+            _hc = find_hostname_by_mac(host['mac'],hosts_config)
+        if _hc is None and host['name'] in hosts_config:
+            _hc = hosts_config[host['name']]
+        if _hc is not None:
+            host.update(_hc)
+        result.append(host)
+    return result
+
+
+def fnmatch2sql(pattern):
+    return pattern

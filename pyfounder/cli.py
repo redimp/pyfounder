@@ -6,6 +6,7 @@ import os
 import click
 import requests
 from pyfounder.helper import yaml_load, yaml_dump, mkdir_p
+from pprint import pformat, pprint
 
 class Config(dict):
     def __init__(self, *args, **kwargs):
@@ -31,10 +32,24 @@ pass_config = click.make_pass_decorator(Config, ensure=True)
 
 @pass_config
 def query_server(cfg,u):
-    print(cfg)
     # check if url exists
+    if 'url' not in cfg:
+        raise click.UsageError("No server url. Please configure pyfounder.")
     # check version
-    return u
+    if 'version' not in cfg:
+        try:
+            r = requests.get("{}/version".format(cfg['url']))
+        except requests.RequestException as e:
+            raise click.UsageError("Failed to check server version: {}".format(e))
+        cfg['version'] = r.text
+        cfg.save()
+    r = requests.get("{}{}".format(cfg['url'], u))
+    r.raise_for_status()
+    return r.text
+
+def query_server_yaml(u):
+    y = query_server(u)
+    return yaml_load(y)
 
 @click.group()
 @click.version_option()
@@ -49,6 +64,7 @@ def cli(cfg):
 def config(cfg, url=None):
     """Client configuration"""
     if url is not None:
+        url = url.rstrip('/')
         cfg['url'] = url
     cfg.save()
 
@@ -59,7 +75,39 @@ def hosts():
 
 @hosts.command('ls')
 def host_list():
-    click.echo('Host list {}'.format(query_server('x')))
+    host_list = query_server_yaml('/api/hosts/')
+    click.echo('Host list {}'.format(pformat(host_list)))
+
+def host_query(hostname):
+    data = []
+    for h in hostname:
+        # get list of hostdata
+        hostdata = query_server_yaml('/api/hosts/{}'.format(h))
+        data += hostdata
+    return data
+
+@hosts.command('show')
+@click.argument('hostname', nargs=-1)
+def host_show(hostname):
+    hostdata = host_query(hostname)
+    for hd in hostdata:
+        data.append([hd['name'], hd['mac'], hd['ip']])
+    pprint(data)
+
+@hosts.command('yaml')
+@click.argument('hostname', nargs=-1)
+def host_yaml(hostname):
+    data = host_query(hostname)
+    if len(data)>0:
+        hosts = {}
+        for host in data:
+            hosts[host['name']] = {
+                    'interface':host['interface'],
+                    'mac':host['mac'],
+                    'ip':host['ip'],
+                    'class':host['class'] or []
+                    }
+        click.echo(yaml_dump({'hosts':hosts}))
 
 @hosts.command('new')
 def host_add():
