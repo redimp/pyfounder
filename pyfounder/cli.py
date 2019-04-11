@@ -6,6 +6,7 @@ import os
 import click
 import requests
 from pyfounder.helper import yaml_load, yaml_dump, mkdir_p
+from pyfounder import __version__
 from pprint import pformat, pprint
 
 class Config(dict):
@@ -61,24 +62,15 @@ def cli(cfg):
 @cli.command()
 @click.option('--url', type=str, help='pyfounder server url')
 @pass_config
-def config(cfg, url=None):
+def client(cfg, url=None):
     """Client configuration"""
     if url is not None:
         url = url.rstrip('/')
         cfg['url'] = url
     cfg.save()
 
-@cli.group()
-def hosts():
-    """Manages hosts"""
-    pass
-
-@hosts.command('ls')
-def host_list():
-    host_list = query_server_yaml('/api/hosts/')
-    click.echo('Host list {}'.format(pformat(host_list)))
-
 def host_query(hostname):
+    """query hostdata from server - helper function"""
     data = []
     for h in hostname:
         # get list of hostdata
@@ -86,15 +78,29 @@ def host_query(hostname):
         data += hostdata
     return data
 
-@hosts.command('show')
+@cli.command('ls')
+@click.argument('hostname', nargs=-1)
+def host_list(hostname=None):
+    if hostname is None or len(hostname)<1:
+        host_list = query_server_yaml('/api/hosts/')
+    else:
+        host_list = host_query(hostname)
+    data = []
+    for hd in host_list:
+        try:
+            states = hd['states']
+        except:
+            states = ''
+        data.append([hd['name'], hd['mac'], hd['ip'], states])
+    pprint(data)
+
+
+@cli.command('show')
 @click.argument('hostname', nargs=-1)
 def host_show(hostname):
     hostdata = host_query(hostname)
-    for hd in hostdata:
-        data.append([hd['name'], hd['mac'], hd['ip']])
-    pprint(data)
 
-@hosts.command('yaml')
+@cli.command('yaml')
 @click.argument('hostname', nargs=-1)
 def host_yaml(hostname):
     data = host_query(hostname)
@@ -108,10 +114,6 @@ def host_yaml(hostname):
                     'class':host['class'] or []
                     }
         click.echo(yaml_dump({'hosts':hosts}))
-
-@hosts.command('new')
-def host_add():
-    click.echo('add Host')
 
 if __name__ == "__main__":
     cli()

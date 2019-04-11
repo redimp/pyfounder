@@ -7,7 +7,7 @@ from pprint import pformat, pprint
 from flask import render_template, Response, abort, request
 
 from pyfounder import app
-from pyfounder.models import db, Host
+from pyfounder.models import db, HostInfo
 from pyfounder import models
 from pyfounder import helper
 from pyfounder import __version__
@@ -86,11 +86,11 @@ def discovery_report():
             raise
         # store data
         #print(data)
-        host = Host.query.filter_by(mac=data['mac']).first()
+        host = HostInfo.query.filter_by(mac=data['mac']).first()
         if host is None:
             app.logger.info('New Discovered Host: {}'.format(data['mac']))
             # create host
-            host = models.Host(mac=data['mac'], first_seen=datetime.utcnow())
+            host = models.HostInfo(mac=data['mac'], first_seen=datetime.utcnow())
         else:
             app.logger.info('Updated Discovered Host: {}'.format(data['mac']))
         # update host data
@@ -103,7 +103,7 @@ def discovery_report():
         # store in database
         db.session.add(host)
         db.session.commit()
-        host = models.Host.query.filter_by(mac=data['mac']).first()
+        host = models.HostInfo.query.filter_by(mac=data['mac']).first()
         return str(host.mac)
     if _error is not None:
         app.logger.warning('Discovery Error: {}'.format(_error))
@@ -114,7 +114,7 @@ def discovery_report():
 @app.route('/discovery-remote-control/<mac>')
 def discovery_remote_control(mac):
     # TODO check status and update status
-    host = models.Host.query.filter_by(mac=mac).first()
+    host = models.HostInfo.query.filter_by(mac=mac).first()
     if host is None or not host.has_state('discovered'):
         # no discovery data found, ask client to discover
         return 'discover'
@@ -147,21 +147,24 @@ def fetch_discovery():
 @app.route('/api/hosts/<pattern>')
 def api_hosts(pattern=None):
     # build the query
-    query = Host.query
+    query = HostInfo.query
     if pattern is not None:
         # extend the query
         query = query.filter(
-                    Host.name.ilike('{}'.format(pattern)) |
-                    Host.mac.ilike('{}'.format(pattern))
+                    HostInfo.name.ilike('{}'.format(pattern)) |
+                    HostInfo.mac.ilike('{}'.format(pattern))
                 )
     hosts_data = helper.load_hosts_config()
-    data = list(query.all())
-    hostnames_query = list(set([x.name for x in data]))
-    data = [helper.row2dict(x) for x in data]
-    data = helper.config_host_data(data, hosts_data)
+    qdata = list(query.all())
+    rdata = [helper.row2dict(x) for x in qdata]
+    rdata = helper.config_host_data(rdata, hosts_data)
+    hostnames_query = list(set([x['name'] for x in rdata if 'name' in x]))
     # complete data with hosts_data
     for missing_host in [x for x in hosts_data.keys() if x not in hostnames_query]:
-        data.append(hosts_data[missing_host])
-    yaml_str = helper.yaml_dump(data)
+        rdata.append(hosts_data[missing_host])
+    for h in rdata:
+        print(h['name'])
+        print(h['state'])
+    yaml_str = helper.yaml_dump(rdata)
     return Response(yaml_str, mimetype='text/plain')
 

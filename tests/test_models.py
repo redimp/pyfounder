@@ -8,10 +8,10 @@ import tempfile
 
 from test_pyfounder import PyfounderTestCaseBase
 
-class TestHostModel(PyfounderTestCaseBase):
+class TestHostInfoModel(PyfounderTestCaseBase):
     def test_state(self):
         from pyfounder import models
-        host = models.Host(name='testie')
+        host = models.HostInfo(name='testie')
         self.assertEqual(host.get_states(), [])
         self.assertFalse(host.has_state('a'))
         host.add_state('a')

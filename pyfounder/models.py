@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from pyfounder import app
 db = SQLAlchemy(app)
 
-class Host(db.Model):
+class HostInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
     first_seen = db.Column(db.DateTime())

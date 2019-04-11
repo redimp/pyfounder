@@ -43,5 +43,16 @@ a:
         y = pyfounder.helper.yaml_dump(d)
         self.assertEqual(d,pyfounder.helper.yaml_load(y))
 
+class host_data_Test(unittest.TestCase):
+    def test_config_host_data(self):
+        hosts_config = {
+                'example1': {
+                        'mac' : '00:00:00:00:00:01',
+                        'name' : 'example1',
+                        }
+                }
+
+        host_data = [x for (_,x) in hosts_config.items()]
+        hc = pyfounder.helper.config_host_data(host_data,hosts_config)
 if __name__ == '__main__':
     unittest.main()

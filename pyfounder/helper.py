@@ -69,7 +69,7 @@ _host_default_data = {
     'ip':None,
     'interface':None,
     'class':None,
-    'states':[],
+    'state':'',
 }
 
 def load_hosts_config(filename=None):
@@ -90,7 +90,7 @@ def load_hosts_config(filename=None):
         hosts[hostname]['name'] = hostname
     return hosts
 
-def host_config(hostname, hosts):
+def host_config(hostname, hosts=None):
     if hosts is None:
         hosts = load_hosts_config()
     return hosts[hostname]
@@ -162,6 +162,12 @@ def config_host_data(_hostdata, hosts_config=None):
             _hc = hosts_config[host['name']]
         if _hc is not None:
             host.update(_hc)
+        # restore the state
+        try:
+            host['state'] = _host['state']
+        except KeyError:
+            pass
+        print(host['state'])
         result.append(host)
     return result
 
