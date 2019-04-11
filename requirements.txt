@@ -3,3 +3,4 @@ Flask
 pyyaml
 requests
 Click
+tabulate

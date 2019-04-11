@@ -63,15 +63,6 @@ def load_hosts_yaml(filename=None):
     except (IOError, yaml.YAMLError) as e:
         raise ConfigException("Unable to load {}: {}.".format(filename,e))
 
-_host_default_data = {
-    'name':None,
-    'mac':None,
-    'ip':None,
-    'interface':None,
-    'class':None,
-    'state':'',
-}
-
 def load_hosts_config(filename=None):
     d = load_hosts_yaml(filename)
     hosts = {}
@@ -79,7 +70,7 @@ def load_hosts_config(filename=None):
         return {}
     for hostname, cfg in d['hosts'].items():
         # set host default values
-        hosts[hostname] = _host_default_data
+        hosts[hostname] = {}
         if 'class' in cfg:
             if cfg['class'] in d['classes']:
                 hosts[hostname] = d['classes'][cfg['class']]
@@ -147,29 +138,29 @@ def empty_or_None(s):
     return False
 
 
-def config_host_data(_hostdata, hosts_config=None):
-    result = []
-    if hosts_config is None:
-       hosts_config = load_hosts_config()
-    for _host in _hostdata:
-        host = dict(_host_default_data)
-        host.update(_host)
-        _hc = None
-        if not empty_or_None(host['mac']):
-            _hn = find_hostname_by_mac(host['mac'],hosts_config)
-            _hc = hosts_config[_hn]
-        if _hc is None and host['name'] in hosts_config:
-            _hc = hosts_config[host['name']]
-        if _hc is not None:
-            host.update(_hc)
-        # restore the state
-        try:
-            host['state'] = _host['state']
-        except KeyError:
-            pass
-        print(host['state'])
-        result.append(host)
-    return result
+#def config_host_data(_hostdata, hosts_config=None):
+#    result = []
+#    if hosts_config is None:
+#       hosts_config = load_hosts_config()
+#    for _host in _hostdata:
+#        host = dict(_host_default_data)
+#        host.update(_host)
+#        _hc = None
+#        if not empty_or_None(host['mac']):
+#            _hn = find_hostname_by_mac(host['mac'],hosts_config)
+#            _hc = hosts_config[_hn]
+#        if _hc is None and host['name'] in hosts_config:
+#            _hc = hosts_config[host['name']]
+#        if _hc is not None:
+#            host.update(_hc)
+#        # restore the state
+#        try:
+#            host['state'] = _host['state']
+#        except KeyError:
+#            pass
+#        print(host['state'])
+#        result.append(host)
+#    return result
 
 
 def fnmatch2sql(pattern):

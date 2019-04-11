@@ -9,6 +9,7 @@ from flask import render_template, Response, abort, request
 from pyfounder import app
 from pyfounder.models import db, HostInfo
 from pyfounder import models
+from pyfounder.core import Host
 from pyfounder import helper
 from pyfounder import __version__
 from datetime import datetime
@@ -154,17 +155,23 @@ def api_hosts(pattern=None):
                     HostInfo.name.ilike('{}'.format(pattern)) |
                     HostInfo.mac.ilike('{}'.format(pattern))
                 )
-    hosts_data = helper.load_hosts_config()
-    qdata = list(query.all())
-    rdata = [helper.row2dict(x) for x in qdata]
-    rdata = helper.config_host_data(rdata, hosts_data)
-    hostnames_query = list(set([x['name'] for x in rdata if 'name' in x]))
-    # complete data with hosts_data
-    for missing_host in [x for x in hosts_data.keys() if x not in hostnames_query]:
-        rdata.append(hosts_data[missing_host])
-    for h in rdata:
-        print(h['name'])
-        print(h['state'])
-    yaml_str = helper.yaml_dump(rdata)
-    return Response(yaml_str, mimetype='text/plain')
+    hosts_config = helper.load_hosts_config()
+    host_data = []
+    for q in query.all():
+        h = Host(_model=q)
+        # update from host_config
+        if h['name'] is not None and h['name'] in hosts_config:
+            h.from_dict(hosts_config[h['name']])
+        elif h['mac'] is not None:
+            n = helper.find_hostname_by_mac(h['mac'],hosts_config)
+            if n is not None:
+                h.from_dict(hosts_config[n])
+        host_data.append(h)
 
+    #import pdb; pdb.set_trace()
+    hostnames_query = [x['name'] for x in host_data if 'name' in x.data]
+    # complete data with hosts_data
+    for missing_host in [x for x in hosts_config.keys() if x not in hostnames_query]:
+        host_data.append(Host(_dict=hosts_config[missing_host]))
+    yaml_str = helper.yaml_dump([h.data for h in host_data])
+    return Response(yaml_str, mimetype='text/plain')

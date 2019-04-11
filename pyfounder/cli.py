@@ -8,6 +8,7 @@ import requests
 from pyfounder.helper import yaml_load, yaml_dump, mkdir_p
 from pyfounder import __version__
 from pprint import pformat, pprint
+from tabulate import tabulate
 
 class Config(dict):
     def __init__(self, *args, **kwargs):
@@ -87,12 +88,8 @@ def host_list(hostname=None):
         host_list = host_query(hostname)
     data = []
     for hd in host_list:
-        try:
-            states = hd['states']
-        except:
-            states = ''
-        data.append([hd['name'], hd['mac'], hd['ip'], states])
-    pprint(data)
+        data.append([hd['name'], hd['mac'], hd['ip'], hd['state']])
+    click.echo(tabulate(data, headers=['hostname','mac','ip','states']))
 
 
 @cli.command('show')

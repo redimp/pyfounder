@@ -48,7 +48,5 @@ class HostInfo(db.Model):
                 pass
         self.state = "|".join(states)
 
-
-
 db.create_all()
 
