@@ -86,9 +86,11 @@ def host_list(hostname=None):
         host_list = query_server_yaml('/api/hosts/')
     else:
         host_list = host_query(hostname)
+    # pick data to print
     data = []
     for hd in host_list:
         data.append([hd['name'], hd['mac'], hd['ip'], hd['state']])
+    # print data
     click.echo(tabulate(data, headers=['hostname','mac','ip','states']))
 
 
@@ -96,6 +98,7 @@ def host_list(hostname=None):
 @click.argument('hostname', nargs=-1)
 def host_show(hostname):
     hostdata = host_query(hostname)
+    click.echo(pformat(hostdata))
 
 @cli.command('yaml')
 @click.argument('hostname', nargs=-1)
