@@ -8,7 +8,7 @@ apt-get install --no-install-recommends -y linux-image-amd64 \
 apt-get install  --no-install-recommends -y lvm2 vim-tiny curl openssh-client net-tools \
     isc-dhcp-client less rsync tar gzip parted iputils-ping nmap \
     util-linux psmisc python3-minimal python3-requests python3-psutil python3-urwid \
-    lshw python3-yaml
+    lshw python3-yaml util-linux
 # apt-get install -y acpid mandb mc
 
 if ! test -e /usr/bin/vim && test -e /usr/bin/vim.tiny; then
