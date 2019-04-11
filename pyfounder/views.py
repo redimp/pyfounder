@@ -61,8 +61,7 @@ def fetch(hostname, template_name=None):
     except ValueError as e:
         abort(404, "Host {} not found.".format(hostname))
     if template_name is None:
-        from yaml import dump
-        ymlcfg = dump(cfg)
+        ymlcfg = yaml_dump(cfg)
         return Response(ymlcfg, mimetype='text/plain')
     # find template filename
     try:
@@ -175,3 +174,25 @@ def api_hosts(pattern=None):
         host_data.append(Host(_dict=hosts_config[missing_host]))
     yaml_str = helper.yaml_dump([h.data for h in host_data])
     return Response(yaml_str, mimetype='text/plain')
+
+@app.route('/api/rediscover/<hostname>')
+def api_rediscover(hostname):
+    # find host
+    # delete pxelinux.cfg/<mac>
+    # ? delete from database
+    # "send:" reboot command
+    return "WIP"
+
+@app.route('/api/rebuild/<hostname>')
+def api_rebuild(hostname):
+    # find host
+    # write install pxelinux.cfg/<mac>
+    # "send:" reboot command
+    return "WIP"
+
+@app.route('/api/install/<hostname>')
+def api_install(hostname):
+    # find host
+    # write install pxelinux.cfg/<mac>
+    # "send:" reboot command
+    return "WIP"
