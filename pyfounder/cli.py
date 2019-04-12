@@ -5,7 +5,7 @@
 import os
 import click
 import requests
-from pyfounder.helper import yaml_load, yaml_dump, mkdir_p
+from pyfounder.helper import yaml_load, yaml_dump, mkdir_p, empty_or_None
 from pyfounder import __version__
 from pprint import pformat, pprint
 from tabulate import tabulate
@@ -114,6 +114,20 @@ def host_yaml(hostname):
                     'class':host['class'] or []
                     }
         click.echo(yaml_dump({'hosts':hosts}))
+
+@cli.command('rediscover')
+@click.argument('hostname', nargs=-1)
+def host_rediscover(hostname):
+    hosts = host_query(hostname)
+    if len(hosts)<1:
+        click.echo("No matching hosts found.")
+    for host in hosts:
+        if empty_or_None(host['mac']):
+            # print warning
+            click.echo("No mac address for {} found.".format(host['name']))
+            continue
+        reply = query_server('/api/rediscover/{}'.format(host['mac']))
+        click.echo('{} replied {}'.format(host['name'] or host['mac'],reply))
 
 if __name__ == "__main__":
     cli()

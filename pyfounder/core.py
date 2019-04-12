@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # vim: set et ts=8 sts=4 sw=4 ai fenc=utf-8:
 
+import os
+from pyfounder import helper
 from pprint import pformat, pprint
 
 class Host:
@@ -22,6 +24,9 @@ class Host:
         if _dict is not None:
             self.from_dict(_dict)
 
+    def __repr__(self):
+        return "<Host {} {}>".format(self.data['name'] or '?', self.data['mac'] or '?')
+
     def from_db(self, row):
         """Update Host from db model object"""
         for column in row.__table__.columns:
@@ -35,3 +40,20 @@ class Host:
 
     def __getitem__(self, key):
         return self.data[key]
+
+    def __pxelinux_cfg_filename(self):
+        if helper.empty_or_None(self.data['mac']):
+            raise ValueError('No mac address configured.')
+        return os.path.join(helper.get_pxecfg_directory(), self.data['mac'])
+
+    def update_pxelinux_cfg(self, content):
+        fn = self.__pxelinux_cfg_filename()
+        pass
+
+    def remove_pxelinux_cfg(self):
+        fn = self.__pxelinux_cfg_filename()
+        if not os.path.exists(fn):
+            return
+        os.remove(fn)
+
+

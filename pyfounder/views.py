@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vim: set et ts=8 sts=4 sw=4 ai fenc=utf-8:
 
+import re
 from pprint import pformat, pprint
 
 from flask import render_template, Response, abort, request
@@ -99,6 +100,7 @@ def discovery_report():
         host.cpu_model = data['cpu_model']
         host.ram_bytes = data['ram_bytes']
         host.discovery_yaml = _data
+        host.remove_state('rediscover')
         host.add_state('discovered','not_installed')
         # store in database
         db.session.add(host)
@@ -115,9 +117,10 @@ def discovery_report():
 def discovery_remote_control(mac):
     # TODO check status and update status
     host = models.HostInfo.query.filter_by(mac=mac).first()
-    if host is None or not host.has_state('discovered'):
-        # no discovery data found, ask client to discover
-        return 'discover'
+    if host is None:
+        if not host.has_state('discovered'):
+            # no discovery data found, ask client to discover
+            return 'discover'
     # check if host is configured
     hostname = helper.find_hostname_by_mac(mac)
     if hostname is None:
@@ -171,27 +174,60 @@ def api_hosts(pattern=None):
     hostnames_query = [x['name'] for x in host_data if 'name' in x.data]
     # complete data with hosts_data
     for missing_host in [x for x in hosts_config.keys() if x not in hostnames_query]:
+        missing_mac = hosts_config[missing_host]['mac']
+        if pattern is not None:
+            pattern_re = re.escape(pattern)
+            pattern_re = pattern_re.replace('\\%','.*')
+            pattern_re = "^{}$".format(pattern_re)
+            if not re.match(pattern_re, missing_host) and not re.match(pattern_re, missing_mac):
+                continue
         host_data.append(Host(_dict=hosts_config[missing_host]))
     yaml_str = helper.yaml_dump([h.data for h in host_data])
     return Response(yaml_str, mimetype='text/plain')
 
-@app.route('/api/rediscover/<hostname>')
-def api_rediscover(hostname):
-    # find host
-    # delete pxelinux.cfg/<mac>
-    # ? delete from database
-    # "send:" reboot command
-    return "WIP"
+def get_host(mac):
+    hosts_config = helper.load_hosts_config()
+    host_config = None
+    n = helper.find_hostname_by_mac(mac,hosts_config)
+    if n is not None:
+        host_config = hosts_config[n]
+    query = HostInfo.query.filter_by(mac=mac).first()
+    host = Host(_model = query, _dict=host_config)
+    return host
 
-@app.route('/api/rebuild/<hostname>')
-def api_rebuild(hostname):
+@app.route('/api/rediscover/<mac>')
+def api_rediscover(mac):
+    # find host
+    host = get_host(mac)
+    pprint(host)
+    # delete pxelinux.cfg/<mac>
+    host.remove_pxelinux_cfg()
+    # delete from database
+    h = HostInfo.query.filter_by(mac=mac).first()
+    if h is None:
+        h = HostInfo()
+        h.mac = mac
+    else:
+        h.serialnumber = None
+        h.cpu_model = None
+        h.ram_bytes = None
+        h.gpu = None
+        h.discovery_yaml = None
+    # "send:" rediscover command
+    h.remove_state('discovered')
+    db.session.add(h)
+    db.session.commit()
+    return "ok."
+
+@app.route('/api/rebuild/<mac>')
+def api_rebuild(mac):
     # find host
     # write install pxelinux.cfg/<mac>
     # "send:" reboot command
     return "WIP"
 
-@app.route('/api/install/<hostname>')
-def api_install(hostname):
+@app.route('/api/install/<mac>')
+def api_install(mac):
     # find host
     # write install pxelinux.cfg/<mac>
     # "send:" reboot command
