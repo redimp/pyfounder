@@ -44,6 +44,7 @@ sudo rsync -aH --delete-after ${TARGET}/chroot/ ${TARGET}/chroot-final/
 # and clean up
 chmod +x ${TARGET}/chroot-final/scripts/clean.sh
 sudo chroot ${TARGET}/chroot-final /scripts/clean.sh
+sudo chown -R root:root ${TARGET}/chroot-final
 
 # create image
 mkdir -p ${IMAGE_TARGET_DIR}
