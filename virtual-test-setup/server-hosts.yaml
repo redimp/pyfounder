@@ -14,9 +14,9 @@ classes:
       pxelinux.cfg: pxe/localhdd
       pxelinux.cfg-install: pxe/install-bionic
       preseed.cfg: preseed.cfg/default
-      early_command:
-      late_command:
-      first_boot:
+      early_command.sh: early_command/early_default.sh
+      late_command.sh: late_command/late_workstation.sh
+      first_boot: first_boot/first_workstation.sh
     variables:
       apt_proxy: http://10.0.10.10:3142
   # the class for all workstations
