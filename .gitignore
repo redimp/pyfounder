@@ -88,3 +88,5 @@ sdist/
 settings.cfg
 db.sqlite
 hosts.yaml
+app-data
+pyfounder.log*
