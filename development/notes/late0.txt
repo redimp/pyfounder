@@ -1,0 +1,55 @@
+#!/bin/sh
+# ---------------------------------------------------
+# default late_command.sh
+# ---------------------------------------------------
+# Warning, the installer only got a sh, no bash
+
+# Write hostname
+echo "yori" > /target/etc/hostname
+
+# Store Ralph's ssh key
+mkdir -p /target/root/.ssh
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA9rellCPugeqPQ4PcWwv190NjFC/70BPNg1SMkti94oXW2MVuHSth18X2bY1goLpNczjkSJP+XivcpF5tgSVOoD680Y0C6ehfp9vKjRn9afADn5Tc15QgN4ovdmudmkeS7gNnl6zcKPUlhL3qW8membrWC2XIRyqP8p1XqXXH6MjgKuMsRI2yaQ3XqLY2qvwMYNEvupzmUA3qjh+e+1v7m1OsJrIFt5PM6KXLQ9NkZ2lxOfA2uVShZ7FqxlJwvahscYHAF72o+cNttYhdZts/nl6ICIgZ2uXRpH2v8ba1HpmMaTO0rG/d/CQb3+CF7cWyRI1vhsJy6SJQheTCbeR2Lw== ralph.thesen@scai.fhg.de" > /target/root/.ssh/authorized_keys
+# ansible root key
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD1MxhRNLwuTofL6UQ1KQKlpm8HMtL2sopTF8CHEHrvgSuKKeSzVqnnjX7LF+vNckyCFFdCZT/CtTfs4fPiPBvx1FtOWIJ4WD267kO0PL6/hellkE0BWnVLNnGBGadSLvFk5eT89+hx13+gt423DMwzd300v9J83g/2mPWtgx33M7s2gtrlZEQq2RgMstmctYMrOIehqWAslIzSq0in1qnlP8x2g0W20fjO9Spe9oAGpEHv+zAegp7BG1WS/DCePvh88v6ziKBiOSn7khvOxVMhQVTEy30JnmY8XbEKlGTzTOKqkQKrvfextq5/8N8hhLFc4tGyQ/LeVqEK9sGcg6ut root@clu" >> /target/root/.ssh/authorized_keys
+
+# Wait for the Network
+NETWORK_WAIT=1
+while [ "$NETWORK_WAIT" -ne 0 ]; do
+        ping -c 4 clu
+        NETWORK_WAIT=$?
+        sleep 5
+done
+
+# prepare first_boot.sh
+wget http://clu/phpseed/index.php/fetch/first_boot.sh/yori -O /target/etc/first_boot.sh
+
+# rewrite /etc/rc.local
+mv /target/etc/rc.local /target/etc/rc.local.phpseed
+
+echo -e '#!/bin/sh -e\n#\n# rc.local\ntest -f /etc/first_boot.sh && /bin/bash /etc/first_boot.sh &>/var/log/firstboot.log \nexit 0' > /target/etc/rc.local
+
+chmod +x /target/etc/rc.local
+
+
+# installation log
+mkdir -p /target/var/log/phpseed
+wget http://clu/phpseed/index.php/fetch/preseed.cfg/yori -O /target/var/log/phpseed/preseed.cfg;
+dmesg >/target/var/log/phpseed/dmesg.log
+cp /var/log/syslog /target/var/log/phpseed/syslog.log
+cp /var/log/partman /target/var/log/phpseed/partman.log
+
+# install basic packages
+DEBIAN_FRONTEND=noninteractive apt-install --install-recommends ssh vim postfix mailutils
+DEBIAN_FRONTEND=noninteractive apt-install --install-recommends debconf-utils aptitude ntp bash-completion build-essential
+DEBIAN_FRONTEND=noninteractive apt-install python 
+
+sed -i '/^GRUB_CMDLINE_LINUX=.*/ { /net.ifnames=0/! s/\(.*\)"/\1 net.ifnames=0"/}' /target/etc/default/grub
+
+# default end
+#!/bin/sh
+
+# late_command.sh -- workstation
+
+DEBIAN_FRONTEND=noninteractive apt-install ubuntu-desktop xubuntu-desktop
+#DEBIAN_FRONTEND=noninteractive apt-install nvidia-361 nvidia-settings
