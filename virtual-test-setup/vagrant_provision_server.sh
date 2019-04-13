@@ -54,14 +54,6 @@ systemctl restart dnsmasq.service
 # apt-cacher, python and development environment
 apt-get install -y apt-cacher-ng make python3-virtualenv virtualenv
 
-OUTER_IF=enp0s3
-INNER_IF=enp0s8
-
-iptables -A FORWARD -o $OUTER_IF -i $INNER_IF -s 10.0.10.0/24 -m conntrack --ctstate NEW -j ACCEPT
-iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT 
-iptables -t nat -A POSTROUTING -o $OUTER_IF -j MASQUERADE
-# iptables -A FORWARD -o $OUTER_IF -s 10.0.10.0/16 -m conntrack --ctstate NEW -j ACCEPT 
-
 # run screen -dmS pyfounder /vagrant/pyfounder_server.sh
 
 cp /vagrant/pyfounder_server.sh /pyfounder_server.sh
