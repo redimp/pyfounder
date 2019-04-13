@@ -82,6 +82,7 @@ def host_query(hostname):
 @cli.command('ls')
 @click.argument('hostname', nargs=-1)
 def host_list(hostname=None):
+    """List hosts"""
     if hostname is None or len(hostname)<1:
         host_list = query_server_yaml('/api/hosts/')
     else:
@@ -97,12 +98,14 @@ def host_list(hostname=None):
 @cli.command('show')
 @click.argument('hostname', nargs=-1)
 def host_show(hostname):
+    """Show host detailed information"""
     hostdata = host_query(hostname)
     click.echo(pformat(hostdata))
 
 @cli.command('yaml')
 @click.argument('hostname', nargs=-1)
 def host_yaml(hostname):
+    """Print yaml configuration using discovered and configured data"""
     data = host_query(hostname)
     if len(data)>0:
         hosts = {}
@@ -115,9 +118,7 @@ def host_yaml(hostname):
                     }
         click.echo(yaml_dump({'hosts':hosts}))
 
-@cli.command('rediscover')
-@click.argument('hostname', nargs=-1)
-def host_rediscover(hostname):
+def send_api_command(hostname, command):
     hosts = host_query(hostname)
     if len(hosts)<1:
         click.echo("No matching hosts found.")
@@ -126,8 +127,26 @@ def host_rediscover(hostname):
             # print warning
             click.echo("No mac address for {} found.".format(host['name']))
             continue
-        reply = query_server('/api/rediscover/{}'.format(host['mac']))
+        reply = query_server('/api/{}/{}'.format(command,host['mac']))
         click.echo('{} replied {}'.format(host['name'] or host['mac'],reply))
+
+@cli.command('rediscover')
+@click.argument('hostname', nargs=-1)
+def host_rediscover(hostname):
+    """Ask the host to rediscover"""
+    return send_api_command(hostname, 'rediscover')
+
+@cli.command('install')
+@click.argument('hostname', nargs=-1)
+def host_install(hostname):
+    """Install the host"""
+    return send_api_command(hostname, 'install')
+
+@cli.command('rebuild')
+@click.argument('hostname', nargs=-1)
+def host_rebuild(hostname):
+    """Install the host"""
+    return send_api_command(hostname, 'rebuild')
 
 if __name__ == "__main__":
     cli()
