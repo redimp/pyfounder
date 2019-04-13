@@ -1,0 +1,1 @@
+tail -c +0 -f /tmp/random | grep --line-buffered ".*" | while read -r -N 512 -t 5 LINE0 || true ; do if [ "$LINE0" == "" ]; then echo -n "x"; continue; fi; echo -n "."; echo -n "${LINE0}" >> /tmp/randomout;  done
