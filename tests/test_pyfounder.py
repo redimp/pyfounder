@@ -114,5 +114,21 @@ serialnumber: '42'
         response = rv.data.decode()
         self.assertEqual(response, '00:11:22:33:44:55')
 
+    def test_receive_empty_command(self):
+        mac = '00:11:22:33:44:55'
+        rv = self.test_client.get('/discovery-remote-control/{}'.format(mac))
+        response = rv.data.decode()
+        self.assertEqual(response,'wait')
+
+    def test_receive_send_command(self):
+        host_config = pyfounder.helper.host_config("example1")
+        mac = host_config['mac']
+        h = pyfounder.core.Host(_dict=host_config)
+        cmd = 'xxxaaa'
+        h.send_command(cmd)
+        rv = self.test_client.get('/discovery-remote-control/{}'.format(mac))
+        response = rv.data.decode()
+        self.assertEqual(response, cmd)
+
 if __name__ == '__main__':
     unittest.main()

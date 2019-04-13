@@ -115,25 +115,33 @@ def discovery_report():
 
 @app.route('/discovery-remote-control/<mac>')
 def discovery_remote_control(mac):
-    # TODO check status and update status
+    # check host
     host = models.HostInfo.query.filter_by(mac=mac).first()
     if host is None:
-        if not host.has_state('discovered'):
-            # no discovery data found, ask client to discover
-            return 'discover'
-    # check if host is configured
-    hostname = helper.find_hostname_by_mac(mac)
-    if hostname is None:
-        return 'wait'
-    config = helper.host_config(hostname)
-    host.name = config['hostname']
+        # log
+        app.logger.warning('Unknown host asking for command {} '.format(mac))
+        abort(404)
+    # update last_seen
     host.last_seen = datetime.utcnow()
-    host.add_state('boot_into_install')
+    # check for any
+    command = models.HostCommand.query.filter_by(mac=mac).first()
+    if command is None:
+        db.session.add(host)
+        db.session.commit()
+        return 'wait'
+    # set or remove states
+    if command.add_state is not None:
+        host.add_state(command.add_state)
+    if command.remove_state is not None:
+        host.remove_state(command.remove_state)
+    # host into database
     db.session.add(host)
+    # update command
+    command.received = datetime.utcnow()
+    db.session.add(command)
     db.session.commit()
-    app.logger.info('Reboot Host {} {} into install.'.format(host.name, host.mac))
-
-    return 'reboot'
+    app.logger.info('Host {} received command {} '.format(mac, command.command))
+    return command.command
 
 @app.route('/fetch-discovery')
 def fetch_discovery():

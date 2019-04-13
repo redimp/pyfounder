@@ -41,9 +41,12 @@ class Host:
     def __getitem__(self, key):
         return self.data[key]
 
-    def __pxelinux_cfg_filename(self):
+    def __assert_mac(self):
         if helper.empty_or_None(self.data['mac']):
             raise ValueError('No mac address configured.')
+
+    def __pxelinux_cfg_filename(self):
+        self.__assert_mac()
         return os.path.join(helper.get_pxecfg_directory(), self.data['mac'])
 
     def update_pxelinux_cfg(self, content):
@@ -55,5 +58,19 @@ class Host:
         if not os.path.exists(fn):
             return
         os.remove(fn)
+
+    def send_command(self, command, add_state=None, remove_state=None):
+        self.__assert_mac()
+        from pyfounder import db
+        from pyfounder.models import HostCommand
+        # clear old commands
+        HostCommand.query.filter_by(mac=self.data['mac']).delete()
+        # add new command
+        cmd = HostCommand(mac=self.data['mac'],
+                command=command,
+                add_state=add_state,
+                remove_state=remove_state)
+        db.session.add(cmd)
+        db.session.commit()
 
 

@@ -48,5 +48,13 @@ class HostInfo(db.Model):
                 pass
         self.state = "|".join(states)
 
-db.create_all()
+class HostCommand(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    mac = db.Column(db.String(64))
+    send = db.Column(db.DateTime())
+    received = db.Column(db.DateTime())
+    command = db.Column(db.String(255))
+    add_state = db.Column(db.String(64))
+    remove_state = db.Column(db.String(64))
 
+db.create_all()
