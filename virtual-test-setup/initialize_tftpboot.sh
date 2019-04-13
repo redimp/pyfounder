@@ -2,7 +2,7 @@
 
 set -e
 
-TARGET_DIR=$PWD/tftpboot
+TARGET_DIR=${PWD}/tftpboot
 RELEASE=bionic
 
 test -d $TARGET_DIR/pxelinux.cfg || { echo "Error: Missing $TARGET_DIR/pxelinux.cfg."; exit 1; }
@@ -18,7 +18,9 @@ done
 
 NETBOOT_TAR_GZ_URL=http://archive.ubuntu.com/ubuntu/dists/${RELEASE}-updates/main/installer-amd64/current/images/netboot/netboot.tar.gz
 
-NETBOOT_TAR_GZ=download/${RELEASE}-netboot.tar.gz
+NETBOOT_TAR_GZ=${PWD}/download/${RELEASE}-netboot.tar.gz
+
+mkdir -p ${PWD}/download
 
 if [ ! -f $NETBOOT_TAR_GZ ]; then
 	wget -O $NETBOOT_TAR_GZ $NETBOOT_TAR_GZ_URL
