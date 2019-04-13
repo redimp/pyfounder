@@ -307,7 +307,7 @@ def api_install(mac):
     pxe_config = fetch_template('pxelinux.cfg-install', host.data['name'])
     host.update_pxelinux_cfg(pxe_config)
     host.send_command('reboot', add_state='reboot_in_preseed')
-    # "send:" reboot command
+    host.remove_state("installed")
     return "rebooting into preseed."
 
 

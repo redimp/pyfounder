@@ -1,6 +1,4 @@
 #!/bin/bash
-set -e
-
 echo "Running $0 ..."
 
 # Wait for the Network
@@ -10,6 +8,8 @@ while [ "$NETWORK_WAIT" -ne 0 ]; do
         NETWORK_WAIT=$?
         sleep 5
 done
+
+set -e
 
 /usr/bin/wget -q -O /dev/null {{pyfounder_url}}/report/state/{{mac}}/first_boot
 
