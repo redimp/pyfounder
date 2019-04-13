@@ -18,3 +18,5 @@ PYFOUNDER_TEMPLATES = ''
 
 # the public ip where pyfounder is running
 PYFOUNDER_IP = ''
+
+PYFOUNDER_URL = "http://" + PYFOUNDER_IP + ":5000"
