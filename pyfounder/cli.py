@@ -138,7 +138,7 @@ def host_rediscover(hostname):
 
 @cli.command('remove')
 @click.argument('hostname', nargs=-1)
-def host_rediscover(hostname):
+def host_remove(hostname):
     """Remove the host from the database and remove all config files"""
     return send_api_command(hostname, 'remove')
 

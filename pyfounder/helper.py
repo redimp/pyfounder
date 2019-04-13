@@ -70,16 +70,17 @@ def load_hosts_config(filename=None):
         return {}
     for hostname, cfg in d['hosts'].items():
         # set host default values
-        hosts[hostname] = {}
+        hc = {}
         if 'class' in cfg:
             if cfg['class'] in d['classes']:
-                hosts[hostname] = d['classes'][cfg['class']]
+                hc.update(d['classes'][cfg['class']])
         # FIXME use update()
         for key,value in cfg.items():
-            hosts[hostname][key] = value
+            hc[key] = value
         # that looks strange, but it necessary to get everything
         # in one place, when generating the templates
-        hosts[hostname]['name'] = hostname
+        hc['name'] = hostname
+        hosts[hostname] = hc
     return hosts
 
 def global_config():

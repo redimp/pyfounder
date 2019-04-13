@@ -176,9 +176,9 @@ xserver-xorg xserver-xorg/config/monitor/mode-list \
 
 ### Preseeding other packages
 
-d-i preseed/late_command string mkdir -p /target/root/phpseed; wget http://{{pyfounder_ip}}:5000/fetch/{{name}}/late_command.sh -O /target/root/phpseed/late_command.sh;chmod +x /target/root/phpseed/late_command.sh;/target/root/phpseed/late_command.sh
+d-i preseed/late_command string mkdir -p /target/root/pyfounder; wget {{pyfounder_url}}/fetch/{{name}}/late_command.sh -O /target/root/pyfounder/late_command.sh;chmod +x /target/root/pyfounder/late_command.sh;/target/root/pyfounder/late_command.sh
 
-d-i preseed/early_command string mkdir -p /target/root/phpseed; wget http://{{pyfounder_ip}}:5000/fetch/{{name}}/early_command.sh -O /target/root/phpseed/early_command.sh;chmod +x /target/root/phpseed/early_command.sh;/target/root/phpseed/early_command.sh
+d-i preseed/early_command string mkdir -p /target/root/pyfounder; wget {{pyfounder_url}}/fetch/{{name}}/early_command.sh -O /target/root/pyfounder/early_command.sh;chmod +x /target/root/pyfounder/early_command.sh;/target/root/pyfounder/early_command.sh
 
 
 d-i localechooser/supported-locales multiselect en_US.UTF-8

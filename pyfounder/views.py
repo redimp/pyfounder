@@ -187,8 +187,6 @@ def api_hosts(pattern=None):
             if n is not None:
                 h.from_dict(hosts_config[n])
         host_data.append(h)
-
-    #import pdb; pdb.set_trace()
     hostnames_query = [x['name'] for x in host_data if 'name' in x.data]
     # complete data with hosts_data
     for missing_host in [x for x in hosts_config.keys() if x not in hostnames_query]:
@@ -290,6 +288,7 @@ def api_remove(mac):
     # remove Host from database
     HostCommand.query.filter_by(mac=mac).delete()
     HostInfo.query.filter_by(mac=mac).delete()
+    db.session.commit()
     # "send:" reboot command
     return "ok."
 
