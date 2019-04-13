@@ -3,7 +3,7 @@
 # vim: set et ts=8 sts=4 sw=4 ai fenc=utf-8:
 
 import os
-from pyfounder import helper
+from pyfounder import db, helper
 from pprint import pformat, pprint
 
 class Host:
@@ -61,7 +61,6 @@ class Host:
 
     def send_command(self, command, add_state=None, remove_state=None):
         self.__assert_mac()
-        from pyfounder import db
         from pyfounder.models import HostCommand
         # clear old commands
         HostCommand.query.filter_by(mac=self.data['mac']).delete()
@@ -73,4 +72,8 @@ class Host:
         db.session.add(cmd)
         db.session.commit()
 
+    def get_hostinfo(self):
+        self.__assert_mac()
+        from pyfounder.models import HostInfo
+        return HostInfo.query.filter_by(mac=self.data['mac']).first()
 

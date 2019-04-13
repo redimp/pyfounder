@@ -3,8 +3,7 @@
 # vim: set et ts=8 sts=4 sw=4 ai fenc=utf-8:
 
 from flask_sqlalchemy import SQLAlchemy
-from pyfounder import app
-db = SQLAlchemy(app)
+from pyfounder import app, db
 
 class HostInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -13,6 +12,7 @@ class HostInfo(db.Model):
     last_seen = db.Column(db.DateTime())
     state = db.Column(db.String(255))
     mac = db.Column(db.String(64))
+    interface = db.Column(db.String(64))
     serialnumber = db.Column(db.String(128))
     cpu_model = db.Column(db.String(64))
     ram_bytes = db.Column(db.Integer)

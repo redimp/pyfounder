@@ -7,8 +7,8 @@ from pprint import pformat, pprint
 
 from flask import render_template, Response, abort, request
 
-from pyfounder import app
-from pyfounder.models import db, HostInfo
+from pyfounder import app, db
+from pyfounder.models import HostInfo
 from pyfounder import models
 from pyfounder.core import Host
 from pyfounder import helper
@@ -99,6 +99,7 @@ def discovery_report():
         host.serialnumber = data['serialnumber']
         host.cpu_model = data['cpu_model']
         host.ram_bytes = data['ram_bytes']
+        host.interface = data['interface']
         host.discovery_yaml = _data
         host.remove_state('rediscover')
         host.add_state('discovered','not_installed')
@@ -124,7 +125,7 @@ def discovery_remote_control(mac):
     # update last_seen
     host.last_seen = datetime.utcnow()
     # check for any
-    command = models.HostCommand.query.filter_by(mac=mac).first()
+    command = models.HostCommand.query.filter_by(mac=mac,received=None).first()
     if command is None:
         db.session.add(host)
         db.session.commit()
@@ -207,11 +208,11 @@ def get_host(mac):
 def api_rediscover(mac):
     # find host
     host = get_host(mac)
-    pprint(host)
+    # TODO check if host is already installed
     # delete pxelinux.cfg/<mac>
     host.remove_pxelinux_cfg()
     # delete from database
-    h = HostInfo.query.filter_by(mac=mac).first()
+    h = host.get_hostinfo()
     if h is None:
         h = HostInfo()
         h.mac = mac
@@ -223,8 +224,7 @@ def api_rediscover(mac):
         h.discovery_yaml = None
     # "send:" rediscover command
     h.remove_state('discovered')
-    db.session.add(h)
-    db.session.commit()
+    host.send_command('discover')
     return "ok."
 
 @app.route('/api/rebuild/<mac>')
@@ -237,6 +237,11 @@ def api_rebuild(mac):
 @app.route('/api/install/<mac>')
 def api_install(mac):
     # find host
+    host = get_host(mac)
+    # TODO check if host is already installed
     # write install pxelinux.cfg/<mac>
+    hi = host.get_hostinfo()
+    if hi is None or hi.has_state('discovered'):
+        return "Error: Host is not discovered yet."
     # "send:" reboot command
     return "WIP"

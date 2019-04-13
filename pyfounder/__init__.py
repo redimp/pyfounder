@@ -20,5 +20,4 @@ if not flask.helpers.get_debug_flag():
     file_handler.setFormatter(logging.Formatter('<%(asctime)s> <%(levelname)s> %(message)s'))
     app.logger.addHandler(file_handler)
 
-
 import pyfounder.views
