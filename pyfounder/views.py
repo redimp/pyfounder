@@ -8,7 +8,7 @@ from pprint import pformat, pprint
 from flask import render_template, Response, abort, request
 
 from pyfounder import app, db
-from pyfounder.models import HostInfo
+from pyfounder.models import HostInfo, HostCommand
 from pyfounder import models
 from pyfounder.core import Host
 from pyfounder import helper
@@ -111,7 +111,7 @@ def discovery_report():
         host.interface = data['interface']
         host.discovery_yaml = _data
         host.remove_state('rediscover')
-        host.add_state('discovered','not_installed')
+        host.add_state('discovered')
         # store in database
         db.session.add(host)
         db.session.commit()
@@ -203,6 +203,7 @@ def api_hosts(pattern=None):
     yaml_str = helper.yaml_dump([h.data for h in host_data])
     return Response(yaml_str, mimetype='text/plain')
 
+
 def get_host(mac):
     hosts_config = helper.load_hosts_config()
     host_config = None
@@ -212,6 +213,41 @@ def get_host(mac):
     query = HostInfo.query.filter_by(mac=mac).first()
     host = Host(_model = query, _dict=host_config)
     return host
+
+@app.route('/report/state/<mac>/<state>')
+def report_state(mac, state):
+    # find host
+    host = get_host(mac)
+    hi = host.get_hostinfo()
+    app.logger.info(
+        'Host {} reports state: {}'.format(host.data['name'], state)
+        )
+    if state == "early_command":
+        hi.remove_state("reboot_in_preseed")
+        hi.add_state("early_command")
+    if state == "early_command_done":
+        hi.remove_state("early_command","reboot_in_preseed")
+        hi.add_state("early_command_done")
+    elif state == "late_command":
+        hi.remove_state("early_command","early_command_done","reboot_in_preseed")
+        hi.add_state("late_command")
+    elif state == "late_command_done":
+        hi.remove_state("late_command")
+        hi.add_state("reboot_out_preseed")
+        # update pxelinux.cfg
+        pxe_config = fetch_template('pxelinux.cfg', host.data['name'])
+        host.update_pxelinux_cfg(pxe_config)
+    elif state == "first_boot":
+        hi.remove_state("reboot_out_preseed")
+        hi.add_state("first_boot")
+    elif state == "first_boot_done":
+        hi.remove_state("first_boot")
+        hi.add_state("installed")
+    else:
+        hi.add_state(state)
+    db.session.add(hi)
+    db.session.commit()
+    return "ok"
 
 @app.route('/api/rediscover/<mac>')
 def api_rediscover(mac):
@@ -243,6 +279,20 @@ def api_rebuild(mac):
     # "send:" reboot command
     return "WIP"
 
+@app.route('/api/remove/<mac>')
+def api_remove(mac):
+    # find host
+    host = get_host(mac)
+    hi = host.get_hostinfo()
+    app.logger.warning('Removing {} {}.'.format(host['name'] or '?',mac))
+    # remove pxelinux.cfg/<mac>
+    host.remove_pxelinux_cfg()
+    # remove Host from database
+    HostCommand.query.filter_by(mac=mac).delete()
+    HostInfo.query.filter_by(mac=mac).delete()
+    # "send:" reboot command
+    return "ok."
+
 @app.route('/api/install/<mac>')
 def api_install(mac):
     # find host
@@ -260,3 +310,5 @@ def api_install(mac):
     host.send_command('reboot', add_state='reboot_in_preseed')
     # "send:" reboot command
     return "rebooting into preseed."
+
+

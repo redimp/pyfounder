@@ -136,6 +136,12 @@ def host_rediscover(hostname):
     """Ask the host to rediscover"""
     return send_api_command(hostname, 'rediscover')
 
+@cli.command('remove')
+@click.argument('hostname', nargs=-1)
+def host_rediscover(hostname):
+    """Remove the host from the database and remove all config files"""
+    return send_api_command(hostname, 'remove')
+
 @cli.command('install')
 @click.argument('hostname', nargs=-1)
 def host_install(hostname):

@@ -85,7 +85,8 @@ def load_hosts_config(filename=None):
 def global_config():
     from pyfounder import app
     return {
-        'pyfounder_ip' : app.config['PYFOUNDER_IP']
+        'pyfounder_ip' : app.config['PYFOUNDER_IP'],
+        'pyfounder_url' : app.config['PYFOUNDER_URL'],
     }
 
 def host_config(hostname, hosts=None):
