@@ -1,0 +1,211 @@
+# default preseed.cfg
+
+### Localization
+# Locale sets language and country.
+d-i debian-installer/locale string en_US.UTF-8
+
+# Keyboard selection.
+# Disable automatic (interactive) keymap detection.
+d-i console-setup/ask_detect boolean false
+d-i console-setup/layoutcode string us
+d-i keyboard-configuration/layoutcode string us
+d-i keyboard-configuration/compose select No compose key
+d-i keyboard-configuration/layout select English (US)
+d-i keyboard-configuration/variant select English (US)
+d-i keyboard-configuration/unsupported_layout boolean true
+
+### Networking
+d-i netcfg/disable_dhcp boolean false
+
+# Any hostname and domain names assigned from dhcp take precedence over
+# values set here. However, setting the values still prevents the questions
+# from being shown, even if values come from dhcp.
+
+# HOSTNAME
+d-i netcfg/get_hostname string {{name}}
+d-i netcfg/get_domain string local
+# Disable that annoying WEP key dialog.
+d-i netcfg/wireless_wep string
+
+### Mirror settings
+# If you select ftp, the mirror/country string does not need to be set.
+d-i mirror/protocol string http
+d-i mirror/country string manual
+d-i mirror/http/hostname string archive.ubuntu.com
+d-i mirror/http/directory string /ubuntu
+d-i mirror/http/proxy string {{apt_proxy}}
+
+### Clock and time zone setup
+# Controls whether or not the hardware clock is set to UTC.
+d-i clock-setup/utc boolean true
+d-i time/zone string Europe/Berlin
+#d-i clock-setup/ntp boolean true
+#d-i clock-setup/ntp-server {{pyfounder_ip}}
+
+### Partitioning
+# Benutze die groesste freie Partition wenn man die ganze Platte 
+# klein hauen moechte, soll da folgendes noch mit rein: 
+# d-i partman-auto/method string regular
+# Ausserdem sind standartmaessig alle Confirms ausgeschaltet, damit, bei einer falsch konfigurierten Installation nichts passiert
+
+### INS - Partitionierung
+# Dies sind alle Bestaetigungen auf Partitionierungsfragen.
+d-i partman/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman-lvm/confirm boolean true
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+# Dies ermoeglicht die Ueberschreibung von vorhandenen Partitionen
+d-i partman-auto/method string regular
+
+# Gibt an welche Platte benutzt werden soll
+d-i partman-auto/disk string /dev/sda /dev/sdb
+
+### disk partition table
+d-i partman-auto/choose_recipe select expert
+d-i partman-auto/expert_recipe string                         \
+      boot-root ::                                            \
+              500 30000 30000 ext4                            \
+                      method{ format } format{ }              \
+                      use_filesystem{ } filesystem{ ext4 }    \
+                      mountpoint{ / }                         \
+              .                                               \
+              500 3000 30000 ext4                            \
+                      method{ format } format{ }              \
+                      use_filesystem{ } filesystem{ ext4 }    \
+                      mountpoint{ /var }                      \
+              .                                               \
+              1000 512 150% linux-swap                        \
+                      method{ swap } format{ }                \
+              .                                               \
+              12000 20000 -1 ext4                             \
+                      method{ format } format{ }              \
+                      use_filesystem{ } filesystem{ ext4 }    \
+                      mountpoint{ /local }                    \
+              .                                               \
+
+### Account setup
+# Root Account
+d-i passwd/root-login boolean true
+passwd passwd/root-login boolean true
+# Alternatively, to skip creation of a normal user account.
+d-i passwd/make-user boolean false
+passwd passwd/make-user boolean false
+
+# Root password
+# printf "pyfounder" | mkpasswd -s -m sha-512
+d-i passwd/root-password-crypted password $6$eeR0t2Av0nMMoskr$kqvSoSB3wvS8tzrlr28dxhwFd3Xa5n9yQZunLG3et4ZobHm4.XmDy4CWY566SH8d0qHAOVnYdfWHBCkK3m8JT0
+
+### Apt setup
+# You can choose to install restricted and universe software, or to install
+# software from the backports repository.
+d-i apt-setup/restricted boolean true
+d-i apt-setup/universe boolean true
+d-i apt-setup/backports boolean true
+d-i apt-setup/services-select multiselect security
+d-i apt-setup/security_host string security.ubuntu.com
+d-i apt-setup/security_path string /ubuntu
+
+## Additional repositories, local[0-9] available
+#d-i apt-setup/local0/repository string \
+#       http://clu/ubuntu ./
+
+### Package selection
+#tasksel tasksel/first multiselect standard, ubuntu-minimal
+#tasksel tasksel/first multiselect ubuntu-desktop
+tasksel tasksel/first multiselect ubuntu-minimal
+
+# Language pack selection
+d-i pkgsel/install-language-support boolean false
+
+# Some versions of the installer can report back on what software you have
+# installed, and what software you use. The default is not to report back,
+# but sending reports helps the project determine what software is most
+# popular and include it on CDs.
+popularity-contest popularity-contest/participate boolean false
+
+### Boot loader installation
+
+# for internal use; can be preseeded
+grub-installer  grub-installer/grub2_instead_of_grub_legacy     boolean true
+
+# Force GRUB installation to the EFI removable media path?
+grub-installer  grub-installer/force-efi-extra-removable        boolean false
+
+# Device for boot loader installation:
+grub-installer  grub-installer/bootdev  string
+
+# Choices: Enter device manually, /dev/sda
+grub-installer  grub-installer/choose_bootdev   select  /dev/sda
+
+# This is fairly safe to set, it makes grub install automatically to the MBR
+# if no other operating system is detected on the machine.
+d-i grub-installer/only_debian boolean true
+
+# This one makes grub-installer install to the MBR if it also finds some other
+# OS, which is less safe as it might not be able to boot that other OS.
+d-i grub-installer/with_other_os boolean true
+
+### Finishing up the installation
+# Avoid that last message about the install being complete.
+d-i finish-install/reboot_in_progress note
+
+# This will prevent the installer from ejecting the CD during the reboot,
+# which is useful in some situations.
+d-i cdrom-detect/eject boolean false
+
+# This is how to make the installer shutdown when finished, but not
+# reboot into the installed system.
+# d-i debian-installer/exit/halt boolean true
+
+### X configuration
+
+# Monitor autodetection is recommended.
+xserver-xorg xserver-xorg/autodetect_monitor boolean true
+# Uncomment if you have an LCD display.
+#xserver-xorg xserver-xorg/config/monitor/lcd boolean true
+# X has three configuration paths for the monitor. Here's how to preseed
+# the "medium" path, which is always available. The "simple" path may not
+# be available, and the "advanced" path asks too many questions.
+xserver-xorg xserver-xorg/config/monitor/selection-method \
+       select medium
+xserver-xorg xserver-xorg/config/monitor/mode-list \
+       select 1024x768 @ 60 Hz
+
+### Preseeding other packages
+
+#d-i preseed/late_command string mkdir -p /target/root/phpseed; wget http://clu/phpseed/index.php/fetch/late_command.sh/yori -O /target/root/phpseed/late_command.sh;chmod +x /target/root/phpseed/late_command.sh;/target/root/phpseed/late_command.sh || true
+
+#d-i preseed/early_command string mkdir -p /target/root/phpseed; wget http://clu/phpseed/index.php/fetch/early_command.sh/yori -O /target/root/phpseed/early_command.sh;chmod +x /target/root/phpseed/early_command.sh;/target/root/phpseed/early_command.sh || true
+
+d-i localechooser/supported-locales multiselect en_US.UTF-8
+
+user-setup-udeb user-setup/encrypt-home boolean false
+pkgsel pkgsel/update-policy select none
+d-i debian-installer/allow_unauthenticated string true
+
+postfix postfix/main_mailer_type select Internet with smarthost
+postfix postfix/mailname string vmdgrid.scai.fraunhofer.de
+postfix postfix/relayhost string clu.vmdgrid
+postfix postfix/destinations string localhost
+postfix postfix/protocols select ipv4
+postfix postfix/root_address string 
+postfix postfix/not_configured error
+
+libpaper1       libpaper/defaultpaper   select  a4
+
+#ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula boolean true
+#ttf-mscorefonts-installer msttcorefonts/present-mscorefonts-eula note
+#ttf-mscorefonts-installer msttcorefonts/http_proxy string
+#ttf-mscorefonts-installer msttcorefonts/error-mscorefonts-eula error
+#ttf-mscorefonts-installer msttcorefonts/dlurl string
+#ttf-mscorefonts-installer msttcorefonts/savedir string
+#ttf-mscorefonts-installer msttcorefonts/baddldir error
+#ttf-mscorefonts-installer msttcorefonts/dldir string
+
+d-i partman-auto/method string regular
+kdm shared/default-x-display-manager select lightdm
+gdm shared/default-x-display-manager select lightdm
+lightdm shared/default-x-display-manager select lightdm

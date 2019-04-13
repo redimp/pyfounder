@@ -47,11 +47,13 @@ class Host:
 
     def __pxelinux_cfg_filename(self):
         self.__assert_mac()
-        return os.path.join(helper.get_pxecfg_directory(), self.data['mac'])
+        fn = "01-{}".format(self.data['mac'].replace(":","-"))
+        return os.path.join(helper.get_pxecfg_directory(), fn)
 
     def update_pxelinux_cfg(self, content):
         fn = self.__pxelinux_cfg_filename()
-        pass
+        with open(fn, 'w') as f:
+            f.write(content)
 
     def remove_pxelinux_cfg(self):
         fn = self.__pxelinux_cfg_filename()

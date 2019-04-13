@@ -9,5 +9,6 @@ SQLALCHEMY_DATABASE_URI = 'sqlite://'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 PXECFG_DIRECTORY = ''
 PYFOUNDER_HOSTS = ''
+PYFOUNDER_IP = ''
 PYFOUNDER_TEMPLATES = ''
 PYFOUNDER_DISCOVERY_SCRIPT = os.path.join(os.path.abspath(os.path.dirname(__file__)),'pyfounder-discovery-tool.py')

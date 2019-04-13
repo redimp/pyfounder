@@ -37,6 +37,8 @@ class HostInfo(db.Model):
         states.append(state)
         if len(more_states):
             states += more_states
+        # make states uniq
+        states = list(set(states))
         self.state = "|".join(states)
 
     def remove_state(self, state, *more_states):

@@ -53,6 +53,22 @@ def config():
     return render_template('config.html', settings=settings, extra=extra)
 
 
+def fetch_template(template_name, hostname):
+    cfg = helper.host_config(hostname)
+    # find template filename
+    try:
+        template_file = cfg['templates'][template_name]
+    except KeyError as e:
+        abort(404, "Template {} not configured for host {}.".format(
+            template_name, hostname))
+    try:
+        rendered_content = helper.configured_template(template_file,cfg)
+    except Exception as e:
+        abort(404, "Template {} file not found for host {}\n{}.".format(
+            template_name, hostname, e))
+    return rendered_content
+
+
 @app.route('/fetch/<string:hostname>')
 @app.route('/fetch/<string:hostname>/')
 @app.route('/fetch/<string:hostname>/<string:template_name>')
@@ -62,16 +78,9 @@ def fetch(hostname, template_name=None):
     except ValueError as e:
         abort(404, "Host {} not found.".format(hostname))
     if template_name is None:
-        ymlcfg = yaml_dump(cfg)
+        ymlcfg = helper.yaml_dump(cfg)
         return Response(ymlcfg, mimetype='text/plain')
-    # find template filename
-    try:
-        template_file = cfg['templates'][template_name]
-    except KeyError as e:
-        abort(404, "Template {} not configured for host {}.".format(
-            template_name, hostname))
-    rendered_content = helper.configured_template(template_file,
-                                                  cfg)
+    rendered_content =  fetch_template(template_name, hostname)
     return Response(rendered_content, mimetype='text/plain')
 
 @app.route('/discovery-report/', methods=['POST','GET'])
@@ -222,7 +231,7 @@ def api_rediscover(mac):
         h.ram_bytes = None
         h.gpu = None
         h.discovery_yaml = None
-    # "send:" rediscover command
+    # send rediscover command
     h.remove_state('discovered')
     host.send_command('discover')
     return "ok."
@@ -239,9 +248,15 @@ def api_install(mac):
     # find host
     host = get_host(mac)
     # TODO check if host is already installed
-    # write install pxelinux.cfg/<mac>
     hi = host.get_hostinfo()
-    if hi is None or hi.has_state('discovered'):
+    if hi is None or not hi.has_state('discovered'):
         return "Error: Host is not discovered yet."
+    # check host infos
+    if helper.empty_or_None(host.data['name']):
+        return "Error: No name configured yet."
+    # write install pxelinux.cfg/<mac>
+    pxe_config = fetch_template('pxelinux.cfg-install', host.data['name'])
+    host.update_pxelinux_cfg(pxe_config)
+    host.send_command('reboot', add_state='reboot_in_preseed')
     # "send:" reboot command
-    return "WIP"
+    return "rebooting into preseed."

@@ -74,6 +74,7 @@ def load_hosts_config(filename=None):
         if 'class' in cfg:
             if cfg['class'] in d['classes']:
                 hosts[hostname] = d['classes'][cfg['class']]
+        # FIXME use update()
         for key,value in cfg.items():
             hosts[hostname][key] = value
         # that looks strange, but it necessary to get everything
@@ -81,10 +82,19 @@ def load_hosts_config(filename=None):
         hosts[hostname]['name'] = hostname
     return hosts
 
+def global_config():
+    from pyfounder import app
+    return {
+        'pyfounder_ip' : app.config['PYFOUNDER_IP']
+    }
+
 def host_config(hostname, hosts=None):
     if hosts is None:
         hosts = load_hosts_config()
-    return hosts[hostname]
+    d = hosts[hostname]
+    # add global information, that is necessary for the templates
+    d.update(global_config())
+    return d
 
 def find_hostname_by_mac(mac, hosts=None):
     if hosts is None:
@@ -118,7 +128,7 @@ def configured_template(template_file, cfg={}):
         # load template
         template = env.get_template(template_file)
     except TemplateNotFound as e:
-        abort(404, "Template {} not found.".format(template_file))
+        raise ConfigException("Template {} not found.".format(template_file))
     # render
     rendered_content = template.render(**context)
     return rendered_content

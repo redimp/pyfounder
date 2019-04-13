@@ -2,22 +2,28 @@
 globals:
 
 hosts:
+  client:
+    class: workstation
+    interface: enp0s8
+    ip: 10.0.10.11
+    mac: 80:02:70:00:00:02
 
 classes:
   default: &default
     templates:
       pxelinux.cfg: pxe/localhdd
       pxelinux.cfg-install: pxe/install-bionic
-      preseed.cfg: pressed.cfg/default
+      preseed.cfg: preseed.cfg/default
       early_command:
       late_command:
       first_boot:
     variables:
-      apt-proxy: http://10.0.10.10:3142
+      apt_proxy: http://10.0.10.10:3142
   # the class for all workstations
   workstation: &workstation
     <<: *default
     variables:
       test: test
+      apt_proxy: http://10.0.10.10:3142
 
 # vim: set ts=2 sts=2 sw=2 et:

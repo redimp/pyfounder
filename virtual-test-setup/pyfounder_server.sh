@@ -1,5 +1,23 @@
 #!/bin/bash
 
+### Firewall / Router
+
+modprobe ip_tables
+modprobe ip_conntrack
+modprobe iptable_nat
+
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+iptables -F
+
+OUTER_IF=enp0s3
+INNER_IF=enp0s8
+
+iptables -A FORWARD -o $OUTER_IF -i $INNER_IF -s 10.0.10.0/24 -m conntrack --ctstate NEW -j ACCEPT
+iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -t nat -A POSTROUTING -o $OUTER_IF -j MASQUERADE
+
+
 PYFOUNDER_DIRECTORY="/usr/local/lib/pyfounder"
 VENVBIN=$PYFOUNDER_DIRECTORY/venv/bin
 PYTHON=$VENVBIN/python
@@ -28,3 +46,4 @@ export FLASK_APP=pyfounder
 export PYFOUNDER_SETTINGS=/vagrant/server-settings.cfg
 # run flask
 $VENVBIN/flask run --host=0.0.0.0
+
