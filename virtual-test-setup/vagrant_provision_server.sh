@@ -51,8 +51,8 @@ EOF
 
 systemctl restart dnsmasq.service
 
-# apt-cacher
-apt-get install -y apt-cacher-ng python3 python3-virtualenv
+# apt-cacher, python and development environment
+apt-get install -y apt-cacher-ng make python3-virtualenv virtualenv
 
 OUTER_IF=enp0s3
 INNER_IF=enp0s8

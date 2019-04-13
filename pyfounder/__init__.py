@@ -1,6 +1,7 @@
 import os
 from flask import Flask
 import flask.helpers
+from flask_sqlalchemy import SQLAlchemy
 
 __version__ = '0.1.1'
 
@@ -8,6 +9,7 @@ app = Flask(__name__)
 app.config.from_object('pyfounder.default_settings')
 app.config.from_envvar('PYFOUNDER_SETTINGS', silent=True)
 
+db = SQLAlchemy(app)
 
 if not flask.helpers.get_debug_flag():
     import logging

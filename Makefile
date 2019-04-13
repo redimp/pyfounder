@@ -11,11 +11,19 @@ venv:
 #	venv/bin/python setup.py develop
 	venv/bin/pip install -e $(ROOT_DIR)
 
+venv-vagrant:
+	virtualenv --python=python3 venv-vagrant
+#	venv-vagrant/bin/pip install -r requirements.txt
+	venv-vagrant/bin/python setup.py develop
+
 debug: venv
 	FLASK_ENV=development FLASK_DEBUG=True FLASK_APP=pyfounder PYFOUNDER_SETTINGS=../settings.cfg venv/bin/flask run
 
 run: venv
-	FLASK_APP=pyfounder PYFOUNDER_SETTINGS=../settings.cfg venv/bin/flask run
+	FLASK_APP=pyfounder PYFOUNDER_SETTINGS=../settings.cfg venv/bin/flask run --host 0.0.0.0
+
+vagrant-server: venv-vagrant
+	FLASK_APP=pyfounder PYFOUNDER_SETTINGS=../settings.vagrant-server.cfg venv-vagrant/bin/flask run --host 0.0.0.0
 
 test: venv
 	venv/bin/python -m unittest discover -s tests
