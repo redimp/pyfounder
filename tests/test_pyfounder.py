@@ -129,6 +129,9 @@ serialnumber: '42'
         rv = self.test_client.get('/discovery-remote-control/{}'.format(mac))
         response = rv.data.decode()
         self.assertEqual(response, cmd)
+        rv = self.test_client.get('/discovery-remote-control/{}'.format(mac))
+        response = rv.data.decode()
+        self.assertEqual(response, 'wait')
 
 if __name__ == '__main__':
     unittest.main()
