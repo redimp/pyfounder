@@ -35,6 +35,8 @@ while true; do
   sleep 5
 done
 
+systemctl restart dnsmasq
+
 cd /pyfounder
 $PIP install -U -r requirements.txt
 #$PYTHON setup.py develop
