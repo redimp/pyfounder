@@ -294,11 +294,15 @@ def api_remove(mac):
     return "ok."
 
 @app.route('/api/install/<mac>')
-def api_install(mac):
+@app.route('/api/install/<mac>/<option>')
+def api_install(mac,option=None):
     # find host
     host = get_host(mac)
     # TODO check if host is already installed
     hi = host.get_hostinfo()
+    pprint(hi.has_state('installed'))
+    if hi is not None and hi.has_state('installed') and (option is None or "force" not in option):
+        return "Error: Host is already installed. Please use --force if you want to reinstall."
     if hi is None or not hi.has_state('discovered'):
         return "Error: Host is not discovered yet."
     # check host infos
@@ -309,6 +313,8 @@ def api_install(mac):
     host.update_pxelinux_cfg(pxe_config)
     host.send_command('reboot', add_state='reboot_in_preseed')
     hi.remove_state("installed")
-    return "rebooting into preseed."
+    db.session.add(hi)
+    db.session.commit()
+    return "send command to reboot into preseed."
 
 

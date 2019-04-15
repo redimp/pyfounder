@@ -118,7 +118,7 @@ def host_yaml(hostname):
                     }
         click.echo(yaml_dump({'hosts':hosts}))
 
-def send_api_command(hostname, command):
+def send_api_command(hostname, command, option=None):
     hosts = host_query(hostname)
     if len(hosts)<1:
         click.echo("No matching hosts found.")
@@ -127,7 +127,10 @@ def send_api_command(hostname, command):
             # print warning
             click.echo("No mac address for {} found.".format(host['name']))
             continue
-        reply = query_server('/api/{}/{}'.format(command,host['mac']))
+        u = '/api/{}/{}'.format(command,host['mac'])
+        if option is not None:
+            u += '/' + option
+        reply = query_server(u)
         click.echo('{} replied {}'.format(host['name'] or host['mac'],reply))
 
 @cli.command('rediscover')
@@ -144,9 +147,10 @@ def host_remove(hostname):
 
 @cli.command('install')
 @click.argument('hostname', nargs=-1)
-def host_install(hostname):
+@click.option('--force', '-f', is_flag=True, help="Force installation.")
+def host_install(hostname, force):
     """Install the host"""
-    return send_api_command(hostname, 'install')
+    return send_api_command(hostname, 'install', 'force' if force else None)
 
 @cli.command('rebuild')
 @click.argument('hostname', nargs=-1)
