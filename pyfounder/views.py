@@ -300,7 +300,6 @@ def api_install(mac,option=None):
     host = get_host(mac)
     # TODO check if host is already installed
     hi = host.get_hostinfo()
-    pprint(hi.has_state('installed'))
     if hi is not None and hi.has_state('installed') and (option is None or "force" not in option):
         return "Error: Host is already installed. Please use --force if you want to reinstall."
     if hi is None or not hi.has_state('discovered'):
