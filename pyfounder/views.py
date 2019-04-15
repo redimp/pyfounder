@@ -59,6 +59,7 @@ def fetch_template(template_name, hostname):
     try:
         template_file = cfg['templates'][template_name]
     except KeyError as e:
+        print(e)
         abort(404, "Template {} not configured for host {}.".format(
             template_name, hostname))
     try:
@@ -307,7 +308,7 @@ def api_install(mac):
     pxe_config = fetch_template('pxelinux.cfg-install', host.data['name'])
     host.update_pxelinux_cfg(pxe_config)
     host.send_command('reboot', add_state='reboot_in_preseed')
-    host.remove_state("installed")
+    hi.remove_state("installed")
     return "rebooting into preseed."
 
 
