@@ -23,7 +23,7 @@ classes:
   workstation: &workstation
     <<: *default
     variables:
-      test: test
       apt_proxy: http://10.0.10.10:3142
+      test: test
 
 # vim: set ts=2 sts=2 sw=2 et:
