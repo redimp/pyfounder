@@ -102,6 +102,20 @@ def host_show(hostname):
     hostdata = host_query(hostname)
     click.echo(pformat(hostdata))
 
+
+@cli.command('dnsmasq')
+@click.argument('hostname', nargs=-1)
+def dnsmasq(hostname):
+    """Print dnsmasq configuration"""
+    data = host_query(hostname)
+    for h in data:
+        comment = ''
+        # dhcp-host=3c:fd:fe:67:4a:20,node1,10.0.0.1
+        if empty_or_None(h['mac']) or empty_or_None(h['name']) or empty_or_None(h['ip']):
+            comment = "# "
+        click.echo("{}dhcp-host={},{},{}".format(comment, h['mac'] or '?',h['name'] or '?',h['ip'] or '?'))
+
+
 @cli.command('yaml')
 @click.argument('hostname', nargs=-1)
 def host_yaml(hostname):
