@@ -17,7 +17,7 @@ class TestHostInfoModel(PyfounderTestCaseBase):
         host.add_state('a')
         self.assertEqual(host.get_states(), ['a'])
         host.add_state('b','c','d')
-        self.assertEqual(host.get_states(), ['a','b','c','d'])
+        self.assertEqual(sorted(host.get_states()), sorted(['a','b','c','d']))
         self.assertTrue(host.has_state('a'))
         self.assertTrue(host.has_state('d'))
         host.remove_state('a','b','c')
