@@ -44,7 +44,7 @@ $PIP install -e .
 
 export FLASK_ENV=development
 export FLASK_DEBUG=True
-export FLASK_APP=pyfounder
+export FLASK_APP=pyfounder.server
 export PYFOUNDER_SETTINGS=/vagrant/server-settings.cfg
 # run flask
 $VENVBIN/flask run --host=0.0.0.0

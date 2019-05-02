@@ -3,7 +3,8 @@
 # vim: set et ts=8 sts=4 sw=4 ai fenc=utf-8:
 
 import os
-from pyfounder import db, helper
+from pyfounder.server import db
+from pyfounder import helper
 from pprint import pformat, pprint
 
 class Host:
@@ -50,7 +51,7 @@ class Host:
         fn = "01-{}".format(self.data['mac'].replace(":","-"))
         return os.path.join(helper.get_pxecfg_directory(), fn)
 
-    def update_pxelinux_cfg(self, content):
+    def write_pxelinux_cfg(self, content):
         fn = self.__pxelinux_cfg_filename()
         with open(fn, 'w') as f:
             f.write(content)
@@ -60,6 +61,16 @@ class Host:
         if not os.path.exists(fn):
             return
         os.remove(fn)
+
+    def update_pxelinux_cfg(self, task=None):
+        if task is 'default':
+            pxe_config = helper.fetch_template('pxelinux.cfg', self.data['name'])
+            self.write_pxelinux_cfg(pxe_config)
+        elif task is 'install':
+            pxe_config = helper.fetch_template('pxelinux.cfg-install', self.data['name'])
+            self.write_pxelinux_cfg(pxe_config)
+        else:
+            raise RuntimeError("update_pxelinux_cfg: unknown task {}".format(task))
 
     def send_command(self, command, add_state=None, remove_state=None):
         self.__assert_mac()

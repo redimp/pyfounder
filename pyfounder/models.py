@@ -3,7 +3,7 @@
 # vim: set et ts=8 sts=4 sw=4 ai fenc=utf-8:
 
 from flask_sqlalchemy import SQLAlchemy
-from pyfounder import app, db
+from pyfounder.server import app, db
 
 class HostInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -7,11 +7,13 @@ from pprint import pformat, pprint
 
 from flask import render_template, Response, abort, request
 
-from pyfounder import app, db
+from pyfounder.server import app, db
 from pyfounder.models import HostInfo, HostCommand
 from pyfounder import models
+import pyfounder.core
 from pyfounder.core import Host
 from pyfounder import helper
+from pyfounder.helper import fetch_template
 from pyfounder import __version__
 from datetime import datetime
 
@@ -51,23 +53,6 @@ def config():
         extra = "Error: {}".format(e)
     # add settings to the config_arr
     return render_template('config.html', settings=settings, extra=extra)
-
-
-def fetch_template(template_name, hostname):
-    cfg = helper.host_config(hostname)
-    # find template filename
-    try:
-        template_file = cfg['templates'][template_name]
-    except KeyError as e:
-        print(e)
-        abort(404, "Template {} not configured for host {}.".format(
-            template_name, hostname))
-    try:
-        rendered_content = helper.configured_template(template_file,cfg)
-    except Exception as e:
-        abort(404, "Template {} file not found for host {}\n{}.".format(
-            template_name, hostname, e))
-    return rendered_content
 
 
 @app.route('/fetch/<string:hostname>')
@@ -234,8 +219,7 @@ def report_state(mac, state):
         hi.remove_state("late_command")
         hi.add_state("reboot_out_preseed")
         # update pxelinux.cfg
-        pxe_config = fetch_template('pxelinux.cfg', host.data['name'])
-        host.update_pxelinux_cfg(pxe_config)
+        host.update_pxelinux_cfg('default')
     elif state == "first_boot":
         hi.remove_state("reboot_out_preseed")
         hi.add_state("first_boot")
@@ -271,11 +255,12 @@ def api_rediscover(mac):
     host.send_command('discover')
     return "ok."
 
-@app.route('/api/rebuild/<mac>')
-def api_rebuild(mac):
+@app.route('/api/localboot/<mac>')
+def api_localboot(mac):
     # find host
-    # write install pxelinux.cfg/<mac>
-    # "send:" reboot command
+    host = get_host(mac)
+    hi = host.get_hostinfo()
+
     return "WIP"
 
 @app.route('/api/remove/<mac>')
@@ -308,8 +293,7 @@ def api_install(mac,option=None):
     if helper.empty_or_None(host.data['name']):
         return "Error: No name configured yet."
     # write install pxelinux.cfg/<mac>
-    pxe_config = fetch_template('pxelinux.cfg-install', host.data['name'])
-    host.update_pxelinux_cfg(pxe_config)
+    host.update_pxelinux_cfg("install")
     host.send_command('reboot', add_state='reboot_in_preseed')
     hi.remove_state("installed")
     db.session.add(hi)

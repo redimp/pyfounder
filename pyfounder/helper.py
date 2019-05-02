@@ -22,7 +22,7 @@ def yaml_dump(data):
     return yaml.dump(data, Dumper=yaml_Dumper)
 
 def get_pxecfg_directory():
-    from pyfounder import app
+    from pyfounder.server import app
     p = app.config['PXECFG_DIRECTORY']
     if not len(p)>0:
         raise ConfigException("Not configured.".format(p))
@@ -33,7 +33,7 @@ def get_pxecfg_directory():
     return p
 
 def get_hosts_yaml():
-    from pyfounder import app
+    from pyfounder.server import app
     p = app.config['PYFOUNDER_HOSTS']
     if not len(p)>0:
         raise ConfigException("Not configured.".format(p))
@@ -44,7 +44,7 @@ def get_hosts_yaml():
     return p
 
 def get_template_directory():
-    from pyfounder import app
+    from pyfounder.server import app
     p = app.config['PYFOUNDER_TEMPLATES']
     if not len(p)>0:
         raise ConfigException("Not configured.".format(p))
@@ -84,7 +84,7 @@ def load_hosts_config(filename=None):
     return hosts
 
 def global_config():
-    from pyfounder import app
+    from pyfounder.server import app
     return {
         'pyfounder_ip' : app.config['PYFOUNDER_IP'],
         'pyfounder_url' : app.config['PYFOUNDER_URL'],
@@ -148,6 +148,23 @@ def empty_or_None(s):
     if len(s.strip())<1:
         return True
     return False
+
+
+def fetch_template(template_name, hostname):
+    cfg = host_config(hostname)
+    # find template filename
+    try:
+        template_file = cfg['templates'][template_name]
+    except KeyError as e:
+        print(e)
+        abort(404, "Template {} not configured for host {}.".format(
+            template_name, hostname))
+    try:
+        rendered_content = configured_template(template_file,cfg)
+    except Exception as e:
+        abort(404, "Template {} file not found for host {}\n{}.".format(
+            template_name, hostname, e))
+    return rendered_content
 
 
 #def config_host_data(_hostdata, hosts_config=None):

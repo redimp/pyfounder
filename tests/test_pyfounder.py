@@ -7,6 +7,7 @@ import unittest
 import tempfile
 
 import pyfounder
+import pyfounder.server
 from pyfounder.helper import mkdir_p
 
 TEST_HOSTS_YML = """---
@@ -47,7 +48,7 @@ LABEL install
 
 class TestApp(object):
     def __init__(self):
-        self.app = pyfounder.app
+        self.app = pyfounder.server.app
         self._test_client = self.app.test_client()
         self.tempdir = tempfile.TemporaryDirectory()
         self.app.config['SERVER_NAME'] = 'localhost.localdomain'
