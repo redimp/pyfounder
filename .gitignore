@@ -91,3 +91,5 @@ hosts.yaml
 app-data
 pyfounder.log*
 templates
+
+.vscode

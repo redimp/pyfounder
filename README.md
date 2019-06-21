@@ -4,12 +4,10 @@ pyfounder is an open source project that helps automating preseed based installa
 
 pyfounder provides tools for host discovery, provisioning, deployment and configuration management.
 
-# setup
+## setup
 
 TODO
 
-# development tools
+## development tools
 
 TODO
-
-
