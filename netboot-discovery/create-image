@@ -26,6 +26,7 @@ test -f ${TARGET}/chroot/bin/bash || sudo debootstrap \
     http://ftp.de.debian.org/debian/
 
 
+
 sudo mkdir -p ${TARGET}/chroot/scripts
 sudo cp -a ./scripts/* ${TARGET}/chroot/scripts/
 
@@ -49,10 +50,12 @@ sudo chown -R root:root ${TARGET}/chroot-final
 # create image
 mkdir -p ${IMAGE_TARGET_DIR}
 
+set -x
+
 # copy kernel and initrd
-cp ${TARGET}/chroot/boot/vmlinuz-* \
+cp $(ls -1 ${TARGET}/chroot/boot/vmlinuz-* | tail -1) \
     ${IMAGE_TARGET_DIR}/vmlinuz && \
-cp ${TARGET}/chroot/boot/initrd.img-* \
+cp $(ls -1 ${TARGET}/chroot/boot/initrd.img-* | tail -1) \
     ${IMAGE_TARGET_DIR}/initrd
 
 # TODO remove vmlinuz and initrd from chroot-final to free space?
