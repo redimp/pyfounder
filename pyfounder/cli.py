@@ -37,6 +37,10 @@ def query_server(cfg,u):
     # check if url exists
     if 'url' not in cfg:
         raise click.UsageError("No server url. Please configure pyfounder.")
+    try:
+        timout = cfg['timeout']
+    except KeyError:
+        timeout = 2.0
     # check version
     if 'version' not in cfg:
         try:
@@ -45,12 +49,15 @@ def query_server(cfg,u):
             raise click.UsageError("Failed to check server version: {}".format(e))
         cfg['version'] = r.text
         cfg.save()
-    r = requests.get("{}{}".format(cfg['url'], u))
+    r = requests.get("{}{}".format(cfg['url'], u), timeout=1.0)
     r.raise_for_status()
     return r.text
 
 def query_server_yaml(u):
-    y = query_server(u)
+    try:
+        y = query_server(u)
+    except requests.exceptions.ConnectionError:
+        raise click.ClickException("Unable to connect to the server.")
     return yaml_load(y)
 
 @click.group()
@@ -62,13 +69,22 @@ def cli(cfg):
 
 @cli.command()
 @click.option('--url', type=str, help='pyfounder server url')
+@click.option('--timeout', type=float, help='timeout for server reply')
 @pass_config
-def client(cfg, url=None):
+def client(cfg, url=None, timeout=None):
     """Client configuration"""
+    options_used = 0
     if url is not None:
         url = url.rstrip('/')
         cfg['url'] = url
-    cfg.save()
+        options_used += 1
+    if timeout is not None:
+        cfg['timeout'] = timeout
+        options_used += 1
+    if options_used > 0:
+        cfg.save()
+    else:
+        raise click.UsageError("Missing parameter.")
 
 def host_query(hostname):
     """query hostdata from server - helper function"""
