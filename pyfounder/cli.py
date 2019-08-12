@@ -36,7 +36,7 @@ pass_config = click.make_pass_decorator(Config, ensure=True)
 def query_server(cfg,u):
     # check if url exists
     if 'url' not in cfg:
-        raise click.UsageError("No server url. Please configure pyfounder.")
+        raise click.UsageError("No server url. Please configure the pyfounder client.")
     try:
         timout = cfg['timeout']
     except KeyError:
@@ -47,9 +47,10 @@ def query_server(cfg,u):
             r = requests.get("{}/version".format(cfg['url']))
         except requests.RequestException as e:
             raise click.UsageError("Failed to check server version: {}".format(e))
-        cfg['version'] = r.text
-        cfg.save()
-    r = requests.get("{}{}".format(cfg['url'], u), timeout=1.0)
+        else:
+            cfg['version'] = r.text
+            cfg.save()
+    r = requests.get("{}{}".format(cfg['url'], u), timeout=timeout)
     r.raise_for_status()
     return r.text
 
@@ -70,8 +71,9 @@ def cli(cfg):
 @cli.command()
 @click.option('--url', type=str, help='pyfounder server url')
 @click.option('--timeout', type=float, help='timeout for server reply')
+@click.option('-v', '--verbose', count=True)
 @pass_config
-def client(cfg, url=None, timeout=None):
+def client(cfg, url=None, timeout=None, verbose=0):
     """Client configuration"""
     options_used = 0
     if url is not None:
@@ -84,7 +86,18 @@ def client(cfg, url=None, timeout=None):
     if options_used > 0:
         cfg.save()
     else:
-        raise click.UsageError("Missing parameter.")
+        #raise click.UsageError("Missing parameter.")
+        if verbose > 0:
+            click.echo('client config  {}'.format(cfg.config_file))
+        try:
+            click.echo('client url     {}'.format(cfg['url']))
+        except KeyError:
+            click.echo('client url     not configured.')
+        try:
+            click.echo('client timeout {}'.format(cfg['timeout'] or "None"))
+        except KeyError:
+            pass
+
 
 def host_query(hostname):
     """query hostdata from server - helper function"""
