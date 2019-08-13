@@ -13,7 +13,13 @@ from tabulate import tabulate
 class Config(dict):
     def __init__(self, *args, **kwargs):
         self.config_dir = click.get_app_dir('pyfounder')
-        self.config_file = os.path.join(self.config_dir, 'config.yaml')
+        try:
+            self.config_file = os.environ['PYFOUNDER_CLIENT_CONFIG']
+        except KeyError:
+            self.config_file = None
+        # TODO check for /etc/pyfounder/client.yaml ?
+        if self.config_file is None or self.config_file == "":
+            self.config_file = os.path.join(self.config_dir, 'config.yaml')
 
         super(Config, self).__init__(*args, **kwargs)
 
@@ -82,6 +88,8 @@ def client(cfg, url=None, timeout=None, verbose=0):
         url = url.rstrip('/')
         cfg['url'] = url
         options_used += 1
+        if verbose > 0:
+            click.echo('client url     {}'.format(cfg['url']))
     if timeout is not None:
         cfg['timeout'] = timeout
         options_used += 1
