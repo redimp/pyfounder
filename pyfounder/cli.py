@@ -57,6 +57,8 @@ def query_server(cfg,u):
 def query_server_yaml(u):
     try:
         y = query_server(u)
+    except requests.exceptions.HTTPError as e:
+        raise click.ClickException("{}".format(e))
     except requests.exceptions.ConnectionError:
         raise click.ClickException("Unable to connect to the server.")
     return yaml_load(y)
@@ -149,6 +151,9 @@ def dnsmasq(hostname):
 @click.argument('hostname', nargs=-1)
 def host_yaml(hostname):
     """Print yaml configuration using discovered and configured data"""
+    if (len(hostname)<1):
+        click.echo('No hostname provided. Hint: Use % as wildcard.')
+        return
     data = host_query(hostname)
     if len(data)>0:
         hosts = {}
@@ -157,11 +162,16 @@ def host_yaml(hostname):
                     'interface':host['interface'],
                     'mac':host['mac'],
                     'ip':host['ip'],
-                    'class':host['class'] or []
                     }
+            if host['class'] is not None:
+                hosts[host['name']]['class'] = host['class']
+
         click.echo(yaml_dump({'hosts':hosts}))
 
 def send_api_command(hostname, command, option=None):
+    if (len(hostname)<1):
+        click.echo('No hostname provided. Hint: Use % as wildcard.')
+        return
     hosts = host_query(hostname)
     if len(hosts)<1:
         click.echo("No matching hosts found.")
@@ -173,7 +183,12 @@ def send_api_command(hostname, command, option=None):
         u = '/api/{}/{}'.format(command,host['mac'])
         if option is not None:
             u += '/' + option
-        reply = query_server(u)
+        try:
+            reply = query_server(u)
+        except requests.exceptions.HTTPError as e:
+            raise click.ClickException("{}".format(e))
+        except requests.exceptions.ConnectionError:
+            raise click.ClickException("Unable to connect to the server.")
         click.echo('{} replied {}'.format(host['name'] or host['mac'],reply))
 
 @cli.command('rediscover')
@@ -198,7 +213,7 @@ def host_install(hostname, force):
 @cli.command('rebuild')
 @click.argument('hostname', nargs=-1)
 def host_rebuild(hostname):
-    """Install the host"""
+    """Rebuild the host"""
     return send_api_command(hostname, 'rebuild')
 
 if __name__ == "__main__":
