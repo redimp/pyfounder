@@ -6,6 +6,7 @@ import os
 import sys
 import unittest
 import tempfile
+import requests
 import pyfounder.cli as cli
 import pyfounder.server
 from flask import Flask
@@ -14,7 +15,7 @@ from click.testing import CliRunner
 from flask_testing import LiveServerTestCase
 from test_pyfounder import TEST_PXE_INSTALL_BIONIC, TEST_HOSTS_YML
 
-class unconfigured_cli_Test(LiveServerTestCase):
+class cliTest(LiveServerTestCase):
     def setUp(self):
         try:
             self.old_ENV_PYFOUNDER_CLIENT_CONFIG = os.environ['PYFOUNDER_CLIENT_CONFIG']
@@ -33,27 +34,30 @@ class unconfigured_cli_Test(LiveServerTestCase):
     def create_app(self):
         # temporary file for testing client configuration
         self.tempdir = tempfile.TemporaryDirectory()
-        self.app = pyfounder.server.app
-        self.app.config['TESTING'] = True
-        self.app.config['LIVESERVER_PORT'] = 0
-        self.app.config['SERVER_NAME'] = 'localhost'
-        self.app.config['PXECFG_DIRECTORY'] = os.path.join(self.tempdir.name,'pxelinux.cfg')
-        mkdir_p(self.app.config['PXECFG_DIRECTORY'])
-        self.app.config['PYFOUNDER_HOSTS'] =  os.path.join(self.tempdir.name,'hosts.yaml')
-        self.app.config['PYFOUNDER_TEMPLATES'] = os.path.join(self.tempdir.name,'templates')
-        mkdir_p(self.app.config['PYFOUNDER_TEMPLATES'])
+        self.flask_app = pyfounder.server.app
+        self.flask_app.config['TESTING'] = True
+        self.flask_app.config['LIVESERVER_PORT'] = 0
+        # WARNING: Setting a SERVER_NAME breaks flask-testing
+        #self.flask_app.config['SERVER_NAME'] = 'localhost'
+        self.flask_app.config['PXECFG_DIRECTORY'] = os.path.join(self.tempdir.name,'pxelinux.cfg')
+        mkdir_p(self.flask_app.config['PXECFG_DIRECTORY'])
+        self.flask_app.config['PYFOUNDER_HOSTS'] =  os.path.join(self.tempdir.name,'hosts.yaml')
+        self.flask_app.config['PYFOUNDER_TEMPLATES'] = os.path.join(self.tempdir.name,'templates')
+        mkdir_p(self.flask_app.config['PYFOUNDER_TEMPLATES'])
         # write files
-        mkdir_p(os.path.join(self.app.config['PYFOUNDER_TEMPLATES'],'pxe'))
-        with open(os.path.join(self.app.config['PYFOUNDER_TEMPLATES'],'pxe','install-bionic'),'w') as f:
+        mkdir_p(os.path.join(self.flask_app.config['PYFOUNDER_TEMPLATES'],'pxe'))
+        with open(os.path.join(self.flask_app.config['PYFOUNDER_TEMPLATES'],'pxe','install-bionic'),'w') as f:
             f.write(TEST_PXE_INSTALL_BIONIC)
-        with open(self.app.config['PYFOUNDER_HOSTS'],'w') as f:
+        with open(self.flask_app.config['PYFOUNDER_HOSTS'],'w') as f:
             f.write(TEST_HOSTS_YML)
 
         # hack to disable flask banner
         flask_cli = sys.modules['flask.cli']
         flask_cli.show_server_banner = lambda *x: None
 
-        return self.app
+        self.test_client = self.flask_app.test_client()
+
+        return self.flask_app
 
     def run_founder(self, args=[]):
         result = self.runner.invoke(cli.cli, args)
@@ -81,10 +85,28 @@ class unconfigured_cli_Test(LiveServerTestCase):
         self.assertEqual(result.exit_code, 2)
         result = self.runner.invoke(cli.client, ["--verbose", "--url", self.get_server_url()])
         self.assertEqual(result.exit_code, 0)
-        self.configure_client()
 
-    #def test_command_ls(self):
-    #    self.configure_client()
-    #    result = self.runner.invoke(cli.host_list)
-    #    print(result.output)
-    #    self.assertEqual(result.exit_code, 2)
+    def test_command_ls(self):
+        self.configure_client()
+        result = self.run_founder(["ls"])
+        self.assertEqual(result.exit_code, 0)
+        # check output
+        # header?
+        self.assertRegex(result.output,r'hostname\s+mac\s+ip\s+states')
+        # host listed?
+        self.assertRegex(result.output,r'example1\s+00:11:22:33:44:55\s+10.0.0.2')
+
+    def test_command_ls_wildcard(self):
+        self.configure_client()
+        result = self.run_founder(["ls","ex%mple1"])
+        self.assertEqual(result.exit_code, 0)
+        # check output
+        #print(result.output)
+        # header?
+        self.assertRegex(result.output,r'hostname\s+mac\s+ip\s+states')
+        # host listed?
+        self.assertRegex(result.output,r'example1\s+00:11:22:33:44:55\s+10.0.0.2')
+
+
+if __name__ == "__main__": 
+    unittest.main()
