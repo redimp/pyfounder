@@ -136,11 +136,38 @@ def host_list(hostname=None):
 
 @cli.command('show')
 @click.argument('hostname', nargs=-1)
-def host_show(hostname):
+@click.option('-d', '--debug', count=True)
+def host_show(hostname, debug):
     """Show host detailed information"""
     hostdata = host_query(hostname)
-    click.echo(pformat(hostdata))
-
+    if debug > 1:
+        click.echo(pformat(hostdata))
+    for host in hostdata:
+        if debug > 0:
+            click.echo(pformat(host))
+        name = host['name'] or '?'
+        spacer = " " * len("[ {} ]".format(name))
+        click.echo("[ {} ] ip {} mac {} interface {}".format(
+            click.style(name, bold=True),
+            click.style(host['ip'], bold=True),
+            click.style(host['mac'], bold=True),
+            click.style(host['interface'], bold=True)
+            ))
+        click.echo("{} state: {}".format(spacer,
+            click.style(host['state'] or '-'),
+            ))
+        if 'templates' in host and len(host['templates'])>0:
+            click.echo("{} templates:".format(spacer))
+            for k,v in host['templates'].items():
+                click.echo("{}     {}: {}".format(spacer, k, v or ''))
+        else:
+            click.echo("{} templates: -".format(spacer))
+        if 'variables' in host and len(host['variables'])>0:
+            click.echo("{} variables:".format(spacer))
+            for k,v in host['variables'].items():
+                click.echo("{}     {}: {}".format(spacer, k, v or ''))
+        else:
+            click.echo("{} variables: -".format(spacer))
 
 @cli.command('dnsmasq')
 @click.argument('hostname', nargs=-1)
