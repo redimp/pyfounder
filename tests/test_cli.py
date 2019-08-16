@@ -15,7 +15,7 @@ from click.testing import CliRunner
 from flask_testing import LiveServerTestCase
 from test_pyfounder import TEST_PXE_INSTALL_BIONIC, TEST_HOSTS_YML
 
-class cliTest(LiveServerTestCase):
+class ClientLiveServerTest(LiveServerTestCase):
     def setUp(self):
         try:
             self.old_ENV_PYFOUNDER_CLIENT_CONFIG = os.environ['PYFOUNDER_CLIENT_CONFIG']
@@ -72,6 +72,7 @@ class cliTest(LiveServerTestCase):
         self.assertIn(self.get_server_url(), result.output)
         self.assertEqual(result.exit_code, 0)
 
+class cliTest(ClientLiveServerTest):
     def test_no_args(self):
         result = self.run_founder()
         self.assertIn('Usage: cli [OPTIONS] COMMAND [ARGS]...', result.output)
