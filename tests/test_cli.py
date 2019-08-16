@@ -36,7 +36,13 @@ class ClientLiveServerTest(LiveServerTestCase):
         self.tempdir = tempfile.TemporaryDirectory()
         self.flask_app = pyfounder.server.app
         self.flask_app.config['TESTING'] = True
+        self.flask_app.config['DEBUG'] = True
         self.flask_app.config['LIVESERVER_PORT'] = 0
+        self.flask_app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///{}".format(
+                os.path.join(self.tempdir.name,'db.sqlite'))
+        pyfounder.server.db.create_all();
+
+        print(self.flask_app.config['SQLALCHEMY_DATABASE_URI'])
         # WARNING: Setting a SERVER_NAME breaks flask-testing
         #self.flask_app.config['SERVER_NAME'] = 'localhost'
         self.flask_app.config['PXECFG_DIRECTORY'] = os.path.join(self.tempdir.name,'pxelinux.cfg')
@@ -58,6 +64,10 @@ class ClientLiveServerTest(LiveServerTestCase):
         self.test_client = self.flask_app.test_client()
 
         return self.flask_app
+
+    def requests_get(self, query, *args, **kwargs):
+        query = query.lstrip("/")
+        return requests.get("{}/{}".format(self.get_server_url(),query), *args, **kwargs)
 
     def run_founder(self, args=[]):
         result = self.runner.invoke(cli.cli, args)
