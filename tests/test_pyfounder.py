@@ -23,7 +23,8 @@ hosts:
 classes:
   default: 
     templates: &default_temlates
-      pxelinux.cfg: pxe/install-bionic
+      pxelinux.cfg: pxe/boot-local
+      pxelinux.cfg-install: pxe/install-bionic
       preseed.cfg: pressed.cfg/default
     variables: &default_variables
       test: one
