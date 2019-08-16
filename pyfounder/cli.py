@@ -50,7 +50,7 @@ def query_server(cfg,u):
     # check version
     if 'version' not in cfg:
         try:
-            r = requests.get("{}/version".format(cfg['url']))
+            r = requests.get("{}/version".format(cfg['url']), timeout=timeout)
         except requests.RequestException as e:
             raise click.UsageError("Failed to check server version: {}".format(e))
         else:
@@ -129,7 +129,8 @@ def host_list(hostname=None):
     # pick data to print
     data = []
     for hd in host_list:
-        data.append([hd['name'], hd['mac'], hd['ip'], hd['state']])
+        states = " ".join([x for x in hd['state'].split('|')])
+        data.append([hd['name'], hd['mac'], hd['ip'], states])
     # print data
     click.echo(tabulate(data, headers=['hostname','mac','ip','states']))
 
