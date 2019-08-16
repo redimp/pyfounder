@@ -66,7 +66,7 @@ def load_hosts_yaml(filename=None):
 def load_hosts_config(filename=None):
     d = load_hosts_yaml(filename)
     hosts = {}
-    if 'hosts' not in d or d['hosts'] is None:
+    if d is None or 'hosts' not in d or d['hosts'] is None:
         return {}
     for hostname, cfg in d['hosts'].items():
         # set host default values
@@ -156,13 +156,12 @@ def fetch_template(template_name, hostname):
     try:
         template_file = cfg['templates'][template_name]
     except KeyError as e:
-        print(e)
-        abort(404, "Template {} not configured for host {}.".format(
-            template_name, hostname))
+        raise ConfigException("Template {} not configured for host {}\n{}".format(
+            template_name, hostname, e))
     try:
         rendered_content = configured_template(template_file,cfg)
     except Exception as e:
-        abort(404, "Template {} file not found for host {}\n{}.".format(
+        raise ConfigException("Template {} not configured for host {}\n{}".format(
             template_name, hostname, e))
     return rendered_content
 
