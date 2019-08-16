@@ -218,8 +218,13 @@ def report_state(mac, state):
     elif state == "late_command_done":
         hi.remove_state("late_command")
         hi.add_state("reboot_out_preseed")
-        # update pxelinux.cfg
-        host.update_pxelinux_cfg('default')
+        try:
+            # update pxelinux.cfg
+            host.update_pxelinux_cfg('default')
+        except Exception as e:
+            # log error
+            app.logger.warning('Error: {}'.format(e))
+            abort(500,"Error: {}".format(e))
     elif state == "first_boot":
         hi.remove_state("reboot_out_preseed")
         hi.add_state("first_boot")
