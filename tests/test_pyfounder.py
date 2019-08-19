@@ -75,6 +75,10 @@ class PyfounderTestCaseBase(unittest.TestCase):
     def setUp(self):
         self.app = TestApp()
         self.test_client = self.app.test_client()
+        pyfounder.server.db.create_all()
+
+    def tearDown(self):
+        pyfounder.server.db.drop_all()
 
 class ConfigTest(PyfounderTestCaseBase):
     def test_config(self):
