@@ -12,6 +12,8 @@ try:
 except ImportError:
         from yaml import Loader as yaml_Loader, Dumper as yaml_Dumper
 
+import  jinja2.exceptions
+
 class ConfigException(Exception):
     pass
 
@@ -129,7 +131,7 @@ def configured_template(template_file, cfg={}):
     try:
         # load template
         template = env.get_template(template_file)
-    except TemplateNotFound as e:
+    except jinja2.exceptions.TemplateNotFound as e:
         raise ConfigException("Template {} not found.".format(template_file))
     # render
     rendered_content = template.render(**context)
