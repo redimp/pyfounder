@@ -24,12 +24,13 @@ class ClientLiveServerTest(LiveServerTestCase):
         os.environ['PYFOUNDER_CLIENT_CONFIG'] = \
                 os.path.join(self.tempdir.name, 'pyfounderclient.yaml')
         self.runner = CliRunner()
-
+        pyfounder.server.db.create_all();
 
     def tearDown(self):
         # restore environment variable
         os.environ['PYFOUNDER_CLIENT_CONFIG'] = self.old_ENV_PYFOUNDER_CLIENT_CONFIG
         self.tempdir.cleanup()
+        pyfounder.server.db.drop_all();
 
     def create_app(self):
         # temporary file for testing client configuration
@@ -38,8 +39,8 @@ class ClientLiveServerTest(LiveServerTestCase):
         self.flask_app.config['TESTING'] = True
         self.flask_app.config['DEBUG'] = True
         self.flask_app.config['LIVESERVER_PORT'] = 0
-        self.flask_app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///{}".format(
-                os.path.join(self.tempdir.name,'db.sqlite'))
+        #self.flask_app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///{}".format(
+        #        os.path.join(self.tempdir.name,'db.sqlite'))
         pyfounder.server.db.create_all();
 
         print(self.flask_app.config['SQLALCHEMY_DATABASE_URI'])
