@@ -89,7 +89,7 @@ class ConfigTest(PyfounderTestCaseBase):
         self.assertIn('PXECFG_DIRECTORY', response)
 
     def test_host_config(self):
-        rv = self.test_client.get('/fetch/example1/pxelinux.cfg',
+        rv = self.test_client.get('/fetch/example1/pxelinux.cfg-install',
                 follow_redirects=True)
         response = rv.data.decode()
         # test simple variable
