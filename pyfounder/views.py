@@ -11,7 +11,7 @@ from pyfounder.server import app, db
 from pyfounder.models import HostInfo, HostCommand
 from pyfounder import models
 import pyfounder.core
-from pyfounder.core import Host
+from pyfounder.core import Host, get_host
 from pyfounder import helper
 from pyfounder.helper import fetch_template
 from pyfounder import __version__
@@ -81,28 +81,27 @@ def discovery_report():
             print(_data)
             raise
         # store data
-        #print(data)
-        host = HostInfo.query.filter_by(mac=data['mac']).first()
-        if host is None:
+        host_info = HostInfo.query.filter_by(mac=data['mac']).first()
+        if host_info is None:
             app.logger.info('New Discovered Host: {}'.format(data['mac']))
-            # create host
-            host = models.HostInfo(mac=data['mac'], first_seen=datetime.utcnow())
+            # create host_info
+            host_info = models.HostInfo(mac=data['mac'], first_seen=datetime.utcnow())
         else:
             app.logger.info('Updated Discovered Host: {}'.format(data['mac']))
         # update host data
-        host.last_seen = datetime.utcnow()
-        host.serialnumber = data['serialnumber']
-        host.cpu_model = data['cpu_model']
-        host.ram_bytes = data['ram_bytes']
-        host.interface = data['interface']
-        host.discovery_yaml = _data
-        host.remove_state('rediscover')
-        host.add_state('discovered')
+        host_info.last_seen = datetime.utcnow()
+        host_info.serialnumber = data['serialnumber']
+        host_info.cpu_model = data['cpu_model']
+        host_info.ram_bytes = data['ram_bytes']
+        host_info.interface = data['interface']
+        host_info.discovery_yaml = _data
+        host_info.remove_state('rediscover')
+        host_info.add_state('discovered')
         # store in database
-        db.session.add(host)
+        db.session.add(host_info)
         db.session.commit()
-        host = models.HostInfo.query.filter_by(mac=data['mac']).first()
-        return str(host.mac)
+        host_info = models.HostInfo.query.filter_by(mac=data['mac']).first()
+        return str(host_info.mac)
     if _error is not None:
         app.logger.warning('Discovery Error: {}'.format(_error))
         # TODO add to database
@@ -112,26 +111,28 @@ def discovery_report():
 @app.route('/discovery-remote-control/<mac>')
 def discovery_remote_control(mac):
     # check host
-    host = models.HostInfo.query.filter_by(mac=mac).first()
+    host = get_host(mac=mac)
     if host is None:
         # log
         app.logger.warning('Unknown host asking for command {} '.format(mac))
-        abort(404)
+        abort(404, "Host not found.")
+    host_info = host.get_hostinfo()
+    # host_info = models.HostInfo.query.filter_by(mac=mac).first()
     # update last_seen
-    host.last_seen = datetime.utcnow()
+    host_info.last_seen = datetime.utcnow()
     # check for any
     command = models.HostCommand.query.filter_by(mac=mac,received=None).first()
     if command is None:
-        db.session.add(host)
+        db.session.add(host_info)
         db.session.commit()
         return 'wait'
     # set or remove states
     if command.add_state is not None:
-        host.add_state(command.add_state)
+        host_info.add_state(command.add_state)
     if command.remove_state is not None:
-        host.remove_state(command.remove_state)
-    # host into database
-    db.session.add(host)
+        host_info.remove_state(command.remove_state)
+    # update hostinfo in database
+    db.session.add(host_info)
     # update command
     command.received = datetime.utcnow()
     db.session.add(command)
@@ -186,17 +187,6 @@ def api_hosts(pattern=None):
         host_data.append(Host(_dict=hosts_config[missing_host]))
     yaml_str = helper.yaml_dump([h.data for h in host_data])
     return Response(yaml_str, mimetype='text/plain')
-
-
-def get_host(mac):
-    hosts_config = helper.load_hosts_config()
-    host_config = None
-    n = helper.find_hostname_by_mac(mac,hosts_config)
-    if n is not None:
-        host_config = hosts_config[n]
-    query = HostInfo.query.filter_by(mac=mac).first()
-    host = Host(_model = query, _dict=host_config)
-    return host
 
 @app.route('/report/state/<mac>/<state>')
 def report_state(mac, state):
@@ -288,8 +278,8 @@ def api_remove(mac):
 def api_install(mac,option=None):
     # find host
     host = get_host(mac)
-    # TODO check if host is already installed
     hi = host.get_hostinfo()
+    # check if host is already installed
     if hi is not None and hi.has_state('installed') and (option is None or "force" not in option):
         return "Error: Host is already installed. Please use --force if you want to reinstall."
     if hi is None or not hi.has_state('discovered'):
