@@ -25,3 +25,6 @@ class TestHostInfoModel(PyfounderTestCaseBase):
         self.assertTrue(host.has_state('d'))
         host.remove_state('a')
 
+
+if __name__ == '__main__':
+    unittest.main()
