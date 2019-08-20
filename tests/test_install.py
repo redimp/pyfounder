@@ -35,6 +35,29 @@ LOCALBOOT  0"""
 
 class InstallTest(ClientLiveServerTest):
 
+    def _assert_boot_local_example1(self):
+        example1_pxe_filepath = os.path.join(self.flask_app.config['PXECFG_DIRECTORY'],
+            '01-00-11-22-33-44-55')
+        with open(example1_pxe_filepath,'r') as f:
+            example1_pxe = f.read()
+        # enable diff of long strings
+        self.maxDiff = None
+        # render template for host
+        example1_pxe_template = pyfounder.helper.fetch_template('pxelinux.cfg', 'example1')
+        self.assertEqual(example1_pxe.strip(), example1_pxe_template.strip() )
+
+    def _assert_boot_installer_example1(self):
+        # check pxe file
+        example1_pxe_filepath = os.path.join(self.flask_app.config['PXECFG_DIRECTORY'],
+            '01-00-11-22-33-44-55')
+        with open(example1_pxe_filepath,'r') as f:
+            example1_pxe = f.read()
+        # enable diff of long strings
+        self.maxDiff = None
+        # render template for host
+        example1_pxe_template = pyfounder.helper.fetch_template('pxelinux.cfg-install', 'example1')
+        self.assertEqual(example1_pxe.strip(), example1_pxe_template.strip() )
+
     def test_install_process(self):
         self.configure_client()
         # store pxe local boot template
@@ -88,15 +111,8 @@ class InstallTest(ClientLiveServerTest):
         response = self.requests_get("/discovery-remote-control/00:11:22:33:44:55")
         self.assertEqual('reboot',response.text)
         # check pxe file
-        example1_pxe_filepath = os.path.join(self.flask_app.config['PXECFG_DIRECTORY'],
-            '01-00-11-22-33-44-55')
-        with open(example1_pxe_filepath,'r') as f:
-            example1_pxe = f.read()
-        # enable diff of long strings
-        self.maxDiff = None
-        # render template for host
-        example1_pxe_template = pyfounder.helper.fetch_template('pxelinux.cfg-install', 'example1')
-        self.assertEqual(example1_pxe.strip(), example1_pxe_template.strip() )
+        self._assert_boot_installer_example1()
+
         # emulate installer steps
         # early command
         response = self.requests_get("/report/state/00:11:22:33:44:55/early_command")
@@ -113,6 +129,9 @@ class InstallTest(ClientLiveServerTest):
         response.raise_for_status()
         response = self.requests_get("/report/state/00:11:22:33:44:55/late_command_done")
         response.raise_for_status()
+
+        self._assert_boot_local_example1()
+
         # first boot
         response = self.requests_get("/report/state/00:11:22:33:44:55/first_boot")
         response.raise_for_status()
@@ -127,6 +146,11 @@ class InstallTest(ClientLiveServerTest):
         #self.assertNotEqual(0, result.exit_code)
         result = self.run_founder(["install", "example1", "--force"])
         self.assertIn('example1 replied send command to reboot into preseed.', result.output)
+        # check pxe file
+        self._assert_boot_installer_example1()
+        # check remote command
+        response = self.requests_get("/discovery-remote-control/00:11:22:33:44:55")
+        self.assertEqual('reboot',response.text)
 
 if __name__ == "__main__": 
     unittest.main()
