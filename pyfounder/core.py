@@ -6,6 +6,7 @@ import os
 from pyfounder.server import db
 from pyfounder import helper
 from pprint import pformat, pprint
+from datetime import datetime
 
 class Host:
     def __init__(self, name=None, _model=None, _dict=None):
@@ -20,10 +21,10 @@ class Host:
         }
         if name is not None:
             self.data['name'] = name
-        if _model is not None:
-            self.from_db(_model)
         if _dict is not None:
             self.from_dict(_dict)
+        if _model is not None:
+            self.from_db(_model)
 
     def __repr__(self):
         return "<Host {} {}>".format(self.data['name'] or '?', self.data['mac'] or '?')
@@ -31,7 +32,9 @@ class Host:
     def from_db(self, row):
         """Update Host from db model object"""
         for column in row.__table__.columns:
-            self.data[column.name] = getattr(row, column.name)
+            value = getattr(row, column.name)
+            if column.name not in self.data or value is not None:
+                self.data[column.name] = value
 
     def from_dict(self, d):
         self.data.update(d)
@@ -88,5 +91,43 @@ class Host:
     def get_hostinfo(self):
         self.__assert_mac()
         from pyfounder.models import HostInfo
-        return HostInfo.query.filter_by(mac=self.data['mac']).first()
+        host_info = HostInfo.query.filter_by(mac=self.data['mac']).first()
+        if host_info is None:
+            # create host_info
+            host_info = HostInfo(mac=self.data['mac'])
+            # add infos if available
+            now = datetime.utcnow()
+            host_info.first_seen = now
+            host_info.last_seen = now
+            db.session.add(host_info)
+            db.session.commit()
+        # TODO I don't know why this looks weird to me ...
+        if not helper.empty_or_None(self.data['name']):
+            host_info.name = self.data['name']
+            db.session.add(host_info)
+            db.session.commit()
+        return host_info
+
+def get_host(mac):
+    """
+    returns a host object if the host is either found in the database (was discovered)
+    or was configured.
+    """
+    host_config = None
+    # load configuration of all hosts
+    hosts_config = helper.load_hosts_config()
+    # check if the mac is found in the configuration
+    n = helper.find_hostname_by_mac(mac,hosts_config)
+    if n is not None:
+        host_config = hosts_config[n]
+    # check database
+    from pyfounder.models import HostInfo
+    # check for any discovery info
+    query = HostInfo.query.filter_by(mac=mac).first()
+    # no config or discovery data found?
+    if query is None and host_config is None:
+        return None
+    # create and return Host object
+    host = Host(_model = query, _dict=host_config)
+    return host
 
