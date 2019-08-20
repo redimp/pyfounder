@@ -16,6 +16,11 @@ from flask_testing import LiveServerTestCase
 from test_pyfounder import TEST_PXE_INSTALL_BIONIC, TEST_HOSTS_YML
 
 class ClientLiveServerTest(LiveServerTestCase):
+
+    def __init__(self, *args, **kwargs):
+        super(ClientLiveServerTest, self).__init__(*args, **kwargs)
+        self.tempdir = tempfile.TemporaryDirectory()
+
     def setUp(self):
         try:
             self.old_ENV_PYFOUNDER_CLIENT_CONFIG = os.environ['PYFOUNDER_CLIENT_CONFIG']
@@ -24,39 +29,48 @@ class ClientLiveServerTest(LiveServerTestCase):
         os.environ['PYFOUNDER_CLIENT_CONFIG'] = \
                 os.path.join(self.tempdir.name, 'pyfounderclient.yaml')
         self.runner = CliRunner()
+        # configure server environment
         pyfounder.server.db.create_all();
+        # create directory structure and write config files
+        # hosts.yaml
+        with open(self.flask_app.config['PYFOUNDER_HOSTS'],'w') as f:
+            f.write(TEST_HOSTS_YML)
+        # pxe/
+        mkdir_p(self.flask_app.config['PXECFG_DIRECTORY'])
+        # templates/
+        mkdir_p(self.flask_app.config['PYFOUNDER_TEMPLATES'])
+        mkdir_p(os.path.join(self.flask_app.config['PYFOUNDER_TEMPLATES'],'pxe'))
+        with open(os.path.join(self.flask_app.config['PYFOUNDER_TEMPLATES'],'pxe','install-bionic'),'w') as f:
+            f.write(TEST_PXE_INSTALL_BIONIC)
 
     def tearDown(self):
         # restore environment variable
         os.environ['PYFOUNDER_CLIENT_CONFIG'] = self.old_ENV_PYFOUNDER_CLIENT_CONFIG
-        self.tempdir.cleanup()
+        # unconfigure server environment
         pyfounder.server.db.drop_all();
+
+    def __del__(self):
+        try:
+            self.tempdir.cleanup()
+        except FileNotFoundError:
+            pass
 
     def create_app(self):
         # temporary file for testing client configuration
-        self.tempdir = tempfile.TemporaryDirectory()
         self.flask_app = pyfounder.server.app
         self.flask_app.config['TESTING'] = True
         self.flask_app.config['DEBUG'] = True
         self.flask_app.config['LIVESERVER_PORT'] = 0
         #self.flask_app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///{}".format(
         #        os.path.join(self.tempdir.name,'db.sqlite'))
+        #print(self.flask_app.config['SQLALCHEMY_DATABASE_URI'])
         pyfounder.server.db.create_all();
 
-        print(self.flask_app.config['SQLALCHEMY_DATABASE_URI'])
         # WARNING: Setting a SERVER_NAME breaks flask-testing
         #self.flask_app.config['SERVER_NAME'] = 'localhost'
         self.flask_app.config['PXECFG_DIRECTORY'] = os.path.join(self.tempdir.name,'pxelinux.cfg')
-        mkdir_p(self.flask_app.config['PXECFG_DIRECTORY'])
         self.flask_app.config['PYFOUNDER_HOSTS'] =  os.path.join(self.tempdir.name,'hosts.yaml')
         self.flask_app.config['PYFOUNDER_TEMPLATES'] = os.path.join(self.tempdir.name,'templates')
-        mkdir_p(self.flask_app.config['PYFOUNDER_TEMPLATES'])
-        # write files
-        mkdir_p(os.path.join(self.flask_app.config['PYFOUNDER_TEMPLATES'],'pxe'))
-        with open(os.path.join(self.flask_app.config['PYFOUNDER_TEMPLATES'],'pxe','install-bionic'),'w') as f:
-            f.write(TEST_PXE_INSTALL_BIONIC)
-        with open(self.flask_app.config['PYFOUNDER_HOSTS'],'w') as f:
-            f.write(TEST_HOSTS_YML)
 
         # hack to disable flask banner
         flask_cli = sys.modules['flask.cli']
