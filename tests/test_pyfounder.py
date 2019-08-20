@@ -9,6 +9,7 @@ import tempfile
 import pyfounder
 import pyfounder.server
 from pyfounder.helper import mkdir_p
+from pyfounder.core import get_host
 
 TEST_HOSTS_YML = """---
 globals:
@@ -103,33 +104,57 @@ class DiscoverTest(PyfounderTestCaseBase):
         response = rv.data.decode()
         self.assertRegex(response, r'pyfounder \d+\.\d+.*')
 
-    def test_fetch_discovert(self):
+    def test_fetch_discovery(self):
         rv = self.test_client.get('/fetch-discovery')
         response = rv.data.decode()
         self.assertIn("#!/usr/bin/env python3",response)
         self.assertIn("print(dump(data, Dumper=Dumper))",response)
 
-    def test_discovery_report(self):
-        yaml = """cpu_model: testcpu
-interface: enp0s8
-mac: 00:11:22:33:44:55
-ram_bytes: '1024'
-serialnumber: '42'
-"""
+    def _discovery_testhost(self, mac):
+        yaml = "cpu_model: testcpu\ninterface: enp0s8\n"+\
+               "mac: {}\nram_bytes: '1024'\nserialnumber: '42'\n".format(mac)
         rv = self.test_client.post('/discovery-report', data=dict(data=yaml))
         response = rv.data.decode()
-        self.assertEqual(response, '00:11:22:33:44:55')
+        self.assertEqual(response, mac)
 
-    def test_receive_empty_command(self):
-        mac = '00:11:22:33:44:55'
+    def test_discovery_report(self):
+        mac = '99:88:77:66:55:44'
+        self._discovery_testhost(mac)
+        # test receiving empty command
         rv = self.test_client.get('/discovery-remote-control/{}'.format(mac))
         response = rv.data.decode()
+        self.assertEqual(rv.status_code, 200)
         self.assertEqual(response,'wait')
 
-    def test_receive_send_command(self):
+    def test_remote_unknown_host(self):
+        mac = '99:88:77:66:55:44'
+        rv = self.test_client.get('/discovery-remote-control/{}'.format(mac))
+        response = rv.data.decode()
+        self.assertEqual(rv.status_code, 404)
+        self.assertIn('Host not found.', response)
+        # TODO check log
+        # see https://testfixtures.readthedocs.io/en/latest/logging.html#the-decorator
+
+    def test_receive_send_command_discovered_host(self):
+        mac = '99:88:77:66:55:44'
+        self._discovery_testhost(mac)
+        h = get_host(mac)
+        # send test command
+        cmd = 'xxxaaa'
+        h.send_command(cmd)
+        # receive test command
+        rv = self.test_client.get('/discovery-remote-control/{}'.format(mac))
+        response = rv.data.decode()
+        self.assertEqual(response, cmd)
+        # receive wait command
+        rv = self.test_client.get('/discovery-remote-control/{}'.format(mac))
+        response = rv.data.decode()
+        self.assertEqual(response, 'wait')
+
+    def test_receive_send_command_configured_host(self):
         host_config = pyfounder.helper.host_config("example1")
         mac = host_config['mac']
-        h = pyfounder.core.Host(_dict=host_config)
+        h = get_host(mac)
         cmd = 'xxxaaa'
         h.send_command(cmd)
         rv = self.test_client.get('/discovery-remote-control/{}'.format(mac))
