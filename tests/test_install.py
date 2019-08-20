@@ -103,8 +103,8 @@ class InstallTest(ClientLiveServerTest):
         response.raise_for_status()
         # check if state is shown in the client
         result = self.run_founder(["ls", "example1"])
-        # FIXME
-        self.assertIn('early_command', result.output)
+
+        self.assertRegex(result.output,r'example1\s+00:11:22:33:44:55\s+10.0.0.2.+early_command')
 
         response = self.requests_get("/report/state/00:11:22:33:44:55/early_command_done")
         response.raise_for_status()
@@ -118,10 +118,15 @@ class InstallTest(ClientLiveServerTest):
         response.raise_for_status()
         response = self.requests_get("/report/state/00:11:22:33:44:55/first_boot_done")
         response.raise_for_status()
-
+        # check if the client shows the host as installed
         result = self.run_founder(["ls", "example1"])
-
-    pass
+        self.assertRegex(result.output,r'example1\s+00:11:22:33:44:55\s+10.0.0.2.+installed')
+        # try re-install
+        result = self.run_founder(["install", "example1"])
+        self.assertIn('Error: Host is already installed.', result.output)
+        #self.assertNotEqual(0, result.exit_code)
+        result = self.run_founder(["install", "example1", "--force"])
+        self.assertIn('example1 replied send command to reboot into preseed.', result.output)
 
 if __name__ == "__main__": 
     unittest.main()
