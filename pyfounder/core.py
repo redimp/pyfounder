@@ -66,14 +66,28 @@ class Host:
         os.remove(fn)
 
     def update_pxelinux_cfg(self, task=None):
-        if task is 'default':
+        print("upc: {}".format(task))
+        if task in ['default', 'local']:
             pxe_config = helper.fetch_template('pxelinux.cfg', self.data['name'])
             self.write_pxelinux_cfg(pxe_config)
-        elif task is 'install':
+        elif task == 'install':
             pxe_config = helper.fetch_template('pxelinux.cfg-install', self.data['name'])
             self.write_pxelinux_cfg(pxe_config)
         else:
-            raise RuntimeError("update_pxelinux_cfg: unknown task {}".format(task))
+            raise RuntimeError("write_pxelinux_cfg: unknown task {}".format(task))
+
+    def update_boot_cfg(self):
+        print("ubc")
+        hi = self.get_hostinfo()
+        if hi is None:
+            # remove pxe config, host should boot into default == discovery
+            self.remove_pxelinux_cfg()
+        if hi.has_state("boot-local") or hi.has_state("installed"):
+            self.update_pxelinux_cfg("default")
+        elif hi.has_state("boot-install"):
+            self.update_pxelinux_cfg("install")
+        else:
+            self.remove_pxelinux_cfg()
 
     def send_command(self, command, add_state=None, remove_state=None):
         self.__assert_mac()
@@ -107,6 +121,32 @@ class Host:
             db.session.add(host_info)
             db.session.commit()
         return host_info
+
+    def enter_state(self, state):
+        hi = self.get_hostinfo()
+        # handle all the install states:
+        installer_states = ["early_command","early_command_done","reboot_into_preseed",
+                    "booting_into_preseed",
+                    "late_command","late_command_done","first_boot","first_boot_done",
+                    "installed"]
+        if state in installer_states:
+            # clear old state
+            for s in installer_states:
+                hi.remove_state(s)
+            # set new state
+            hi.add_state(state)
+        if state == "reboot_into_preseed":
+            hi.add_state("boot-install")
+            hi.remove_state("boot-local")
+            self.update_boot_cfg()
+        if state in ["late_command_done", "reboot_out_preseed", "installed"]:
+            hi.add_state("boot-local")
+            hi.remove_state("boot-install")
+            self.update_boot_cfg()
+        if state == "first_boot_done":
+            hi.add_state("installed")
+        db.session.add(hi)
+        db.session.commit()
 
 def get_host(mac):
     """

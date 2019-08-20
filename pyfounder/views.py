@@ -196,6 +196,15 @@ def report_state(mac, state):
     app.logger.info(
         'Host {} reports state: {}'.format(host.data['name'], state)
         )
+    try:
+        host.enter_state(state)
+    except Exception as e:
+        # log error
+        app.logger.warning('Error: {}'.format(e))
+        abort(500,"Error: {}".format(e))
+
+    return "ok"
+
     if state == "early_command":
         hi.remove_state("reboot_in_preseed")
         hi.add_state("early_command")
@@ -288,9 +297,10 @@ def api_install(mac,option=None):
     if helper.empty_or_None(host.data['name']):
         return "Error: No name configured yet."
     # write install pxelinux.cfg/<mac>
-    host.update_pxelinux_cfg("install")
-    host.send_command('reboot', add_state='reboot_in_preseed')
-    hi.remove_state("installed")
+    #host.update_pxelinux_cfg("install")
+    host.enter_state("reboot_into_preseed")
+    host.send_command('reboot', add_state='booting_into_preseed')
+    #hi.remove_state("installed")
     db.session.add(hi)
     db.session.commit()
     return "send command to reboot into preseed."
