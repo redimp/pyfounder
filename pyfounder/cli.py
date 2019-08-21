@@ -154,8 +154,12 @@ def host_show(hostname, debug):
             click.style(host['mac'], bold=True),
             click.style(host['interface'], bold=True)
             ))
-        click.echo("{} state: {}".format(spacer,
-            click.style(host['state'] or '-'),
+        if not host['state']:
+            states = ""
+        else:
+            states = " ".join(sorted([x.strip() for x in host['state'].split("|")]))
+        click.echo("{} state:{}".format(spacer,
+            click.style(states, bold=True),
             ))
         if 'templates' in host and len(host['templates'])>0:
             click.echo("{} templates:".format(spacer))
