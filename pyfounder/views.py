@@ -270,13 +270,37 @@ def api_rediscover(mac, option=None):
     # send rediscover command
     return "ok."
 
-@app.route('/api/localboot/<mac>')
-def api_localboot(mac):
+@app.route('/api/add_state/<mac>/<states>')
+def api_add_state(mac,states):
     # find host
     host = get_host(mac)
     hi = host.get_hostinfo()
+    state_list = re.findall(r'([a-zA-Z\-_0-9]+)',states)
+    if (len(state_list)<1):
+        abort(400,"Missing state")
+    hi.add_state(*state_list)
+    # update database
+    db.session.add(hi)
+    db.session.commit()
+    # update boot cfg
+    host.update_boot_cfg()
+    return "Host {} states: {}".format(mac, " ".join(hi.get_states()))
 
-    return "WIP"
+@app.route('/api/remove_state/<mac>/<states>')
+def api_remove_state(mac,states):
+    # find host
+    host = get_host(mac)
+    hi = host.get_hostinfo()
+    state_list = re.findall(r'([a-zA-Z\-_0-9]+)',states)
+    if (len(state_list)<1):
+        abort(400,"Missing state")
+    hi.remove_state(*state_list)
+    # update database
+    db.session.add(hi)
+    db.session.commit()
+    # update boot cfg
+    host.update_boot_cfg()
+    return "Host {} states: {}".format(mac, " ".join(hi.get_states()))
 
 @app.route('/api/remove/<mac>')
 def api_remove(mac):
