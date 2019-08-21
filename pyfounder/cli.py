@@ -129,7 +129,7 @@ def host_list(hostname=None):
     # pick data to print
     data = []
     for hd in host_list:
-        states = " ".join([x for x in hd['state'].split('|')])
+        states = " ".join(sorted([x for x in hd['state'].split('|')]))
         data.append([hd['name'], hd['mac'], hd['ip'], states])
     # print data
     click.echo(tabulate(data, headers=['hostname','mac','ip','states']))
