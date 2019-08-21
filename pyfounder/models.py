@@ -26,7 +26,7 @@ class HostInfo(db.Model):
     def get_states(self):
         if self.state is None:
             return []
-        return self.state.split('|')
+        return sorted([x for x in [y.strip() for y in self.state.split('|')] if len(x)>0])
 
     def has_state(self, state):
         states = self.get_states()
