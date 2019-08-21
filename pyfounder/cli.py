@@ -257,5 +257,17 @@ def host_rebuild(hostname):
     """Rebuild the host"""
     return send_api_command(hostname, 'rebuild')
 
+@cli.command('state')
+@click.argument('hostname', nargs=-1)
+@click.option('--add')
+@click.option('--remove')
+def host_state(hostname,add,remove):
+    """Rebuild the host"""
+    msg = ""
+    if add:
+        msg = send_api_command(hostname, 'add_state', add)
+    if remove:
+        msg = send_api_command(hostname, 'remove_state', remove)
+    return msg
 if __name__ == "__main__":
     cli()
