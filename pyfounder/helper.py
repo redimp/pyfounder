@@ -104,8 +104,11 @@ def find_hostname_by_mac(mac, hosts=None):
     if hosts is None:
         hosts = load_hosts_config()
     for name,config in hosts.items():
-        if config['mac'] == mac:
-            return name
+        try:
+            if config['mac'] == mac:
+                return name
+        except KeyError:
+            pass
     return None
 
 def mkdir_p(path):

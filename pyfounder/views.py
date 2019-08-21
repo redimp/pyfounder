@@ -177,8 +177,11 @@ def api_hosts(pattern=None):
     hostnames_query = [x['name'] for x in host_data if 'name' in x.data]
     # complete data with hosts_data
     for missing_host in [x for x in hosts_config.keys() if x not in hostnames_query]:
-        missing_mac = hosts_config[missing_host]['mac']
-        if pattern is not None:
+        try:
+            missing_mac = hosts_config[missing_host]['mac']
+        except KeyError:
+            missing_mac = None
+        if pattern is not None and missing_mac is not None:
             pattern_re = re.escape(pattern)
             pattern_re = pattern_re.replace('\\%','.*')
             pattern_re = "^{}$".format(pattern_re)
