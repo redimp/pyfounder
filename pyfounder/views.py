@@ -237,26 +237,34 @@ def report_state(mac, state):
     return "ok"
 
 @app.route('/api/rediscover/<mac>')
-def api_rediscover(mac):
+@app.route('/api/rediscover/<mac>/<option>')
+def api_rediscover(mac, option=None):
     # find host
     host = get_host(mac)
-    # TODO check if host is already installed
-    # delete pxelinux.cfg/<mac>
-    host.remove_pxelinux_cfg()
-    # delete from database
-    h = host.get_hostinfo()
-    if h is None:
-        h = HostInfo()
-        h.mac = mac
+    # check if host is already installed
+    host_info = host.get_hostinfo()
+    if host_info is not None and host_info.has_state('installed') and \
+            (option is None or "force" not in option):
+        return "Error: Host is already installed. Please use --force if you want to rediscover the host."
+
+    # delete old infos from database
+    if host_info is None:
+        host_info = HostInfo()
+        host_info.mac = mac
     else:
-        h.serialnumber = None
-        h.cpu_model = None
-        h.ram_bytes = None
-        h.gpu = None
-        h.discovery_yaml = None
-    # send rediscover command
-    h.remove_state('discovered')
+        host_info.serialnumber = None
+        host_info.cpu_model = None
+        host_info.ram_bytes = None
+        host_info.gpu = None
+        host_info.discovery_yaml = None
+    # remove all states
+    host_info.state = ""
+    db.session.add(host_info)
+    db.session.commit()
+    # update pxelinux.cfg
+    host.update_boot_cfg()
     host.send_command('discover')
+    # send rediscover command
     return "ok."
 
 @app.route('/api/localboot/<mac>')

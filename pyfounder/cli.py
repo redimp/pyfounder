@@ -229,9 +229,10 @@ def send_api_command(hostname, command, option=None):
 
 @cli.command('rediscover')
 @click.argument('hostname', nargs=-1)
-def host_rediscover(hostname):
+@click.option('--force', '-f', is_flag=True, help="Force installation.")
+def host_rediscover(hostname, force):
     """Ask the host to rediscover"""
-    return send_api_command(hostname, 'rediscover')
+    return send_api_command(hostname, 'rediscover', 'force' if force else None)
 
 @cli.command('remove')
 @click.argument('hostname', nargs=-1)
