@@ -66,7 +66,6 @@ class Host:
         os.remove(fn)
 
     def update_pxelinux_cfg(self, task=None):
-        print("upc: {}".format(task))
         if task in ['default', 'local']:
             pxe_config = helper.fetch_template('pxelinux.cfg', self.data['name'])
             self.write_pxelinux_cfg(pxe_config)
@@ -77,7 +76,6 @@ class Host:
             raise RuntimeError("write_pxelinux_cfg: unknown task {}".format(task))
 
     def update_boot_cfg(self):
-        print("ubc")
         hi = self.get_hostinfo()
         if hi is None:
             # remove pxe config, host should boot into default == discovery
@@ -144,6 +142,7 @@ class Host:
             hi.remove_state("boot-install")
             self.update_boot_cfg()
         if state == "first_boot_done":
+            hi.remove_state("first_boot_done")
             hi.add_state("installed")
         db.session.add(hi)
         db.session.commit()
