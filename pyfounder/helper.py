@@ -95,7 +95,11 @@ def global_config():
 def host_config(hostname, hosts=None):
     if hosts is None:
         hosts = load_hosts_config()
-    d = hosts[hostname]
+    try:
+        d = hosts[hostname]
+    except KeyError:
+        raise ConfigException("Host {} not configured.".format(hostname))
+
     # add global information, that is necessary for the templates
     d.update(global_config())
     return d
