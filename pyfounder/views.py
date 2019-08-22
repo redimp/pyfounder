@@ -13,7 +13,7 @@ from pyfounder import models
 import pyfounder.core
 from pyfounder.core import Host, get_host
 from pyfounder import helper
-from pyfounder.helper import fetch_template
+from pyfounder.helper import fetch_template, ConfigException
 from pyfounder import __version__
 from datetime import datetime
 
@@ -61,12 +61,15 @@ def config():
 def fetch(hostname, template_name=None):
     try:
         cfg = helper.host_config(hostname)
-    except ValueError as e:
+    except ConfigException as e:
         abort(404, "Host {} not found.".format(hostname))
     if template_name is None:
         ymlcfg = helper.yaml_dump(cfg)
         return Response(ymlcfg, mimetype='text/plain')
-    rendered_content =  fetch_template(template_name, hostname)
+    try:
+        rendered_content = fetch_template(template_name, hostname)
+    except ConfigException as e:
+        abort(404, "{}".format(e))
     return Response(rendered_content, mimetype='text/plain')
 
 @app.route('/discovery-report/', methods=['POST','GET'])
