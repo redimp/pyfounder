@@ -39,7 +39,7 @@ class Config(dict):
 pass_config = click.make_pass_decorator(Config, ensure=True)
 
 @pass_config
-def query_server(cfg,u):
+def query_server_core(cfg,u):
     # check if url exists
     if 'url' not in cfg:
         raise click.UsageError("No server url. Please configure the pyfounder client.")
@@ -60,13 +60,17 @@ def query_server(cfg,u):
     r.raise_for_status()
     return r.text
 
-def query_server_yaml(u):
+def query_server(u):
     try:
-        y = query_server(u)
+        txt = query_server_core(u)
     except requests.exceptions.HTTPError as e:
         raise click.ClickException("{}".format(e))
     except requests.exceptions.ConnectionError:
         raise click.ClickException("Unable to connect to the server.")
+    return txt
+
+def query_server_yaml(u):
+    y = query_server(u)
     return yaml_load(y)
 
 @click.group()
@@ -269,5 +273,14 @@ def host_state(hostname,add,remove):
     if remove:
         msg = send_api_command(hostname, 'remove_state', remove)
     return msg
+
+@cli.command('template')
+@click.argument('hostname', nargs=1)
+@click.argument('template', nargs=1)
+def host_template(hostname,template):
+    """Fetch the template of a host."""
+    txt = query_server("/fetch/{}/{}".format(hostname, template))
+    click.echo(txt)
+
 if __name__ == "__main__":
     cli()
