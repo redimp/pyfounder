@@ -109,7 +109,7 @@ def find_hostname_by_mac(mac, hosts=None):
         hosts = load_hosts_config()
     for name,config in hosts.items():
         try:
-            if config['mac'] == mac:
+            if config['mac'].lower() == mac.lower():
                 return name
         except KeyError:
             pass

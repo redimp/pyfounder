@@ -120,7 +120,7 @@ class cliTest(ClientLiveServerTest):
         # header?
         self.assertRegex(result.output,r'hostname\s+mac\s+ip\s+states')
         # host listed?
-        self.assertRegex(result.output,r'example1\s+00:11:22:33:44:55\s+10.0.0.2')
+        self.assertRegex(result.output,r'example1\s+00:11:22:33:aa:55\s+10.0.0.2')
 
     def test_command_ls_wildcard(self):
         self.configure_client()
@@ -131,7 +131,7 @@ class cliTest(ClientLiveServerTest):
         # header?
         self.assertRegex(result.output,r'hostname\s+mac\s+ip\s+states')
         # host listed?
-        self.assertRegex(result.output,r'example1\s+00:11:22:33:44:55\s+10.0.0.2')
+        self.assertRegex(result.output,r'example1\s+00:11:22:33:aa:55\s+10.0.0.2')
 
 
 if __name__ == "__main__": 

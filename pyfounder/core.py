@@ -38,6 +38,8 @@ class Host:
 
     def from_dict(self, d):
         self.data.update(d)
+        if self.data['mac'] is not None:
+            self.data['mac'] = self.data['mac'].lower()
 
     def __setitem__(self, key, value):
         self.data[key] = value
@@ -52,7 +54,7 @@ class Host:
     def __pxelinux_cfg_filename(self):
         self.__assert_mac()
         fn = "01-{}".format(self.data['mac'].replace(":","-"))
-        return os.path.join(helper.get_pxecfg_directory(), fn)
+        return os.path.join(helper.get_pxecfg_directory(), fn.lower())
 
     def write_pxelinux_cfg(self, content):
         fn = self.__pxelinux_cfg_filename()
@@ -162,7 +164,7 @@ def get_host(mac):
     # check database
     from pyfounder.models import HostInfo
     # check for any discovery info
-    query = HostInfo.query.filter_by(mac=mac).first()
+    query = HostInfo.query.filter_by(mac=mac.lower()).first()
     # no config or discovery data found?
     if query is None and host_config is None:
         return None

@@ -17,7 +17,7 @@ globals:
 hosts:
   example1:
     interface: enp0s8
-    mac: 00:11:22:33:44:55
+    mac: 00:11:22:33:aa:55
     ip: 10.0.0.2
     class: workstation
 
@@ -118,7 +118,7 @@ class DiscoverTest(PyfounderTestCaseBase):
         self.assertEqual(response, mac)
 
     def test_discovery_report(self):
-        mac = '99:88:77:66:55:44'
+        mac = '99:88:77:66:55:aa'
         self._discovery_testhost(mac)
         # test receiving empty command
         rv = self.test_client.get('/discovery-remote-control/{}'.format(mac))
@@ -127,7 +127,7 @@ class DiscoverTest(PyfounderTestCaseBase):
         self.assertEqual(response,'wait')
 
     def test_remote_unknown_host(self):
-        mac = '99:88:77:66:55:44'
+        mac = '99:88:77:66:55:aa'
         rv = self.test_client.get('/discovery-remote-control/{}'.format(mac))
         response = rv.data.decode()
         self.assertEqual(rv.status_code, 404)
@@ -136,7 +136,7 @@ class DiscoverTest(PyfounderTestCaseBase):
         # see https://testfixtures.readthedocs.io/en/latest/logging.html#the-decorator
 
     def test_receive_send_command_discovered_host(self):
-        mac = '99:88:77:66:55:44'
+        mac = '99:88:77:66:55:aa'
         self._discovery_testhost(mac)
         h = get_host(mac)
         # send test command

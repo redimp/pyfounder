@@ -84,11 +84,11 @@ def discovery_report():
             print(_data)
             raise
         # store data
-        host_info = HostInfo.query.filter_by(mac=data['mac']).first()
+        host_info = HostInfo.query.filter_by(mac=data['mac'].lower()).first()
         if host_info is None:
             app.logger.info('New Discovered Host: {}'.format(data['mac']))
             # create host_info
-            host_info = models.HostInfo(mac=data['mac'], first_seen=datetime.utcnow())
+            host_info = models.HostInfo(mac=data['mac'].lower(), first_seen=datetime.utcnow())
         else:
             app.logger.info('Updated Discovered Host: {}'.format(data['mac']))
         # update host data
@@ -103,7 +103,7 @@ def discovery_report():
         # store in database
         db.session.add(host_info)
         db.session.commit()
-        host_info = models.HostInfo.query.filter_by(mac=data['mac']).first()
+        host_info = models.HostInfo.query.filter_by(mac=data['mac'].lower()).first()
         return str(host_info.mac)
     if _error is not None:
         app.logger.warning('Discovery Error: {}'.format(_error))
