@@ -24,7 +24,7 @@ def humanbytes(i, binary=False, precision=2):
     multiple = math.trunc(math.log2(i) / math.log2(base))
     value = i / math.pow(base, multiple)
     suffix = MULTIPLES[multiple].format("i" if binary else "")
-    return f"{value:.{precision}f} {suffix}"
+    return "{value:.{precision}f} {suffix}".format(value=value,precision=precision,suffix=suffix)
 
 def yaml_load(str):
     return yaml.load(str, Loader=yaml_Loader)

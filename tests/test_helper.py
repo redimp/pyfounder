@@ -43,5 +43,13 @@ a:
         y = pyfounder.helper.yaml_dump(d)
         self.assertEqual(d,pyfounder.helper.yaml_load(y))
 
+class misc_test(unittest.TestCase):
+    def test_humanbytes(self):
+        self.assertEqual(pyfounder.helper.humanbytes(1024), "1.02 kB")
+        self.assertEqual(pyfounder.helper.humanbytes(1024, binary=1, precision=0), "1 kiB")
+        self.assertEqual(pyfounder.helper.humanbytes(1024, binary=1, precision=0), "1 kiB")
+        self.assertEqual(pyfounder.helper.humanbytes(1024*1024*1024, binary=1, precision=1), "1.0 GiB")
+        self.assertEqual(pyfounder.helper.humanbytes(1024*1024*1024, precision=1), "1.1 GB")
+
 if __name__ == '__main__':
     unittest.main()
