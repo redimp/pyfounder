@@ -5,7 +5,7 @@
 import os
 import click
 import requests
-from pyfounder.helper import yaml_load, yaml_dump, mkdir_p, empty_or_None
+from pyfounder.helper import yaml_load, yaml_dump, mkdir_p, empty_or_None, humanbytes
 from pyfounder import __version__
 from pprint import pformat, pprint
 from tabulate import tabulate
@@ -162,7 +162,7 @@ def host_show(hostname, debug):
             states = ""
         else:
             states = " ".join(sorted([x.strip() for x in host['state'].split("|")]))
-        click.echo("{} state:{}".format(spacer,
+        click.echo("{} state: {}".format(spacer,
             click.style(states, bold=True),
             ))
         if 'templates' in host and len(host['templates'])>0:
@@ -177,6 +177,23 @@ def host_show(hostname, debug):
                 click.echo("{}     {}: {}".format(spacer, k, v or ''))
         else:
             click.echo("{} variables: -".format(spacer))
+        # build hardware dict
+        hardware = {}
+        if 'cpu_model' in host:
+            hardware['cpu'] = host['cpu_model']
+        if 'ram_bytes' in host:
+            try:
+                hardware['ram'] = humanbytes(int(host['ram_bytes']))
+            except:
+                pass
+        if 'serialnumber' in host:
+                hardware['serialnumber'] = host['serialnumber']
+
+        # print hardware stats
+        if len(hardware):
+            click.echo("{} hardware:".format(spacer))
+        for key, value in hardware.items():
+            click.echo("{}     {}: {}".format(spacer,key,value))
 
 @cli.command('dnsmasq')
 @click.argument('hostname', nargs=-1)
