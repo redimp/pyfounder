@@ -5,6 +5,7 @@
 import os
 import errno
 import fnmatch
+import math
 
 import yaml
 try:
@@ -16,6 +17,14 @@ import  jinja2.exceptions
 
 class ConfigException(Exception):
     pass
+
+def humanbytes(i, binary=False, precision=2):
+    MULTIPLES = ["B", "k{}B", "M{}B", "G{}B", "T{}B", "P{}B", "E{}B", "Z{}B", "Y{}B"]
+    base = 1024 if binary else 1000
+    multiple = math.trunc(math.log2(i) / math.log2(base))
+    value = i / math.pow(base, multiple)
+    suffix = MULTIPLES[multiple].format("i" if binary else "")
+    return f"{value:.{precision}f} {suffix}"
 
 def yaml_load(str):
     return yaml.load(str, Loader=yaml_Loader)
