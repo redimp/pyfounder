@@ -200,6 +200,8 @@ def host_show(hostname, debug):
 def dnsmasq(hostname):
     """Print dnsmasq configuration"""
     data = host_query(hostname)
+    if data is None or len(data)<1:
+        raise click.ClickException("No hosts found. Hint: Use % as wildcard.")
     for h in data:
         comment = ''
         # dhcp-host=3c:fd:fe:67:4a:20,node1,10.0.0.1
@@ -213,8 +215,7 @@ def dnsmasq(hostname):
 def host_yaml(hostname):
     """Print yaml configuration using discovered and configured data"""
     if (len(hostname)<1):
-        click.echo('No hostname provided. Hint: Use % as wildcard.')
-        return
+        raise click.ClickException("No hosts found. Hint: Use % as wildcard.")
     data = host_query(hostname)
     if len(data)>0:
         hosts = {}
@@ -231,11 +232,11 @@ def host_yaml(hostname):
 
 def send_api_command(hostname, command, option=None):
     if (len(hostname)<1):
-        click.echo('No hostname provided. Hint: Use % as wildcard.')
-        return
+        raise click.ClickException("No hosts provided. Hint: Use % as wildcard.")
     hosts = host_query(hostname)
     if len(hosts)<1:
-        click.echo("No matching hosts found.")
+        # click.echo("No matching hosts found.")
+        raise click.ClickException("No matching hosts found. Hint: Use % as wildcard.")
     for host in hosts:
         if empty_or_None(host['mac']):
             # print warning
@@ -283,7 +284,7 @@ def host_rebuild(hostname):
 @click.option('--add')
 @click.option('--remove')
 def host_state(hostname,add,remove):
-    """Rebuild the host"""
+    """Add or remove states of a host"""
     msg = ""
     if add:
         msg = send_api_command(hostname, 'add_state', add)
@@ -295,7 +296,7 @@ def host_state(hostname,add,remove):
 @click.argument('hostname', nargs=1)
 @click.argument('template', nargs=1)
 def host_template(hostname,template):
-    """Fetch the template of a host."""
+    """Fetch the template of a host"""
     txt = query_server("/fetch/{}/{}".format(hostname, template))
     click.echo(txt)
 
