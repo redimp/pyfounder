@@ -6,6 +6,7 @@ import os
 import sys
 import unittest
 import tempfile
+import shutil
 import requests
 import pyfounder.cli as cli
 import pyfounder.server
@@ -19,15 +20,18 @@ class ClientLiveServerTest(LiveServerTestCase):
 
     def __init__(self, *args, **kwargs):
         super(ClientLiveServerTest, self).__init__(*args, **kwargs)
-        self.tempdir = tempfile.TemporaryDirectory()
+        self.tempdir = tempfile.mkdtemp()
 
     def setUp(self):
         try:
             self.old_ENV_PYFOUNDER_CLIENT_CONFIG = os.environ['PYFOUNDER_CLIENT_CONFIG']
         except KeyError:
             self.old_ENV_PYFOUNDER_CLIENT_CONFIG = ''
+        # create tempdir
+        mkdir_p(self.tempdir)
+        # configure environment
         os.environ['PYFOUNDER_CLIENT_CONFIG'] = \
-                os.path.join(self.tempdir.name, 'pyfounderclient.yaml')
+                os.path.join(self.tempdir, 'pyfounderclient.yaml')
         self.runner = CliRunner()
         # configure server environment
         pyfounder.server.db.create_all();
@@ -44,16 +48,13 @@ class ClientLiveServerTest(LiveServerTestCase):
             f.write(TEST_PXE_INSTALL_BIONIC)
 
     def tearDown(self):
+        # clean up temp dir
+        if os.path.exists(self.tempdir) and os.path.isdir(self.tempdir):
+            shutil.rmtree(self.tempdir)
         # restore environment variable
         os.environ['PYFOUNDER_CLIENT_CONFIG'] = self.old_ENV_PYFOUNDER_CLIENT_CONFIG
         # unconfigure server environment
         pyfounder.server.db.drop_all();
-
-    def __del__(self):
-        try:
-            self.tempdir.cleanup()
-        except FileNotFoundError:
-            pass
 
     def create_app(self):
         # temporary file for testing client configuration
@@ -68,9 +69,9 @@ class ClientLiveServerTest(LiveServerTestCase):
 
         # WARNING: Setting a SERVER_NAME breaks flask-testing
         #self.flask_app.config['SERVER_NAME'] = 'localhost'
-        self.flask_app.config['PXECFG_DIRECTORY'] = os.path.join(self.tempdir.name,'pxelinux.cfg')
-        self.flask_app.config['PYFOUNDER_HOSTS'] =  os.path.join(self.tempdir.name,'hosts.yaml')
-        self.flask_app.config['PYFOUNDER_TEMPLATES'] = os.path.join(self.tempdir.name,'templates')
+        self.flask_app.config['PXECFG_DIRECTORY'] = os.path.join(self.tempdir,'pxelinux.cfg')
+        self.flask_app.config['PYFOUNDER_HOSTS'] =  os.path.join(self.tempdir,'hosts.yaml')
+        self.flask_app.config['PYFOUNDER_TEMPLATES'] = os.path.join(self.tempdir,'templates')
 
         # hack to disable flask banner
         flask_cli = sys.modules['flask.cli']
