@@ -5,24 +5,20 @@ SERVER_IMAGE=$PWD/images/server.qcow2
 ARCH=amd64
 TARGET_ROOT=$PWD/server_root
 TARGET_HOSTNAME=server
+PYFOUNDER_ROOT=$PWD/..
 
 mkdir -p $TARGET_ROOT
 mkdir -p $(dirname $SERVER_IMAGE)
 
 test -f ${TARGET_ROOT}/bin/bash || {
     sudo debootstrap --arch=${ARCH} \
-        --include vim,dnsmasq,ifupdown,openssh-server,iputils-ping,isc-dhcp-client,bash,init,net-tools,linux-image-${ARCH} \
+        --include gnupg2,vim,dnsmasq,ifupdown,openssh-server,iputils-ping,isc-dhcp-client,bash,init,net-tools,linux-image-${ARCH} \
         --variant=minbase stretch $TARGET_ROOT \
         http://ftp.de.debian.org/debian/
 }
 
 # set root passwd
 echo 'root:pyfounder' | sudo chroot "$TARGET_ROOT" chpasswd
-
-# create fstab
-cat << EOF | sudo tee "${TARGET_ROOT}/etc/fstab"
-/dev/sda / ext4 errors=remount-ro,acl 0 1
-EOF
 
 # set hostname
 echo ${TARGET_HOSTNAME} | sudo tee "$TARGET_ROOT/etc/hostname"
@@ -69,7 +65,7 @@ qemu-system-x86_64 \
   -m 512M \
   -kernel "$TARGET_ROOT/vmlinuz" \
   -initrd "$TARGET_ROOT/initrd.img" \
-  -net user,smb=$PWD/.. \
+  -virtfs local,id=fs0,path=$PYFOUNDER_ROOT,security_model=none,mount_tag=pyfounder \
   -device virtio-rng-pci \
   -device e1000,netdev=n0,mac=52:54:98:76:54:33 \
   -netdev user,id=n0,net=10.0.69.0/24 \

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# configure network
+
 SERVER_IP=10.0.70.1
 
 cat << EOF >/etc/network/interfaces.d/default
@@ -14,6 +16,8 @@ iface eth1 inet static
     address ${SERVER_IP}
     netmask 255.255.255.0
 EOF
+
+# configure dnsmasq (with tftp)
 
 cat << EOF >/etc/dnsmasq.conf
 # dont read /etc/hosts
@@ -49,4 +53,10 @@ systemctl disable systemd-resolved
 # disable auto apt
 systemctl disable apt-daily.timer
 
+mkdir -p /pyfounder
 
+# create fstab
+cat << EOF >/etc/fstab
+/dev/sda / ext4 errors=remount-ro,acl 0 1
+pyfounder /pyfounder 9p trans=virtio,version=9p2000.L 0 0
+EOF
