@@ -1,4 +1,4 @@
-# TODOs and Ideas for pyfpunder
+# TODOs and Ideas for pyfounder
 
 ## TODO List
 
