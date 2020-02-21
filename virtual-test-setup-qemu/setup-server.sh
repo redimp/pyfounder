@@ -13,7 +13,7 @@ mkdir -p $(dirname $SERVER_IMAGE)
 
 test -f ${TARGET_ROOT}/bin/bash || {
     sudo debootstrap --arch=${ARCH} \
-        --include python3-dev,python3-pip,gnupg2,vim,dnsmasq,ifupdown,openssh-server,iputils-ping,isc-dhcp-client,bash,init,net-tools,linux-image-${ARCH} \
+        --include screen,iptables,python3-dev,python3-pip,gnupg2,vim,dnsmasq,ifupdown,openssh-server,iputils-ping,isc-dhcp-client,bash,init,net-tools,linux-image-${ARCH} \
         --variant=minbase stretch $TARGET_ROOT \
         http://ftp.de.debian.org/debian/
 }
