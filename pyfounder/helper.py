@@ -69,9 +69,9 @@ def load_hosts_yaml(filename=None):
     try:
         with open(filename, 'r') as f:
             return yaml.load(f, Loader=yaml_Loader)
-    except (yaml.MarkedYAMLError) as e:
+    except (IOError) as e:
         raise ConfigException("Unable to load {}: {}.".format(filename,e))
-    except (IOError, yaml.YAMLError) as e:
+    except (yaml.MarkedYAMLError, yaml.YAMLError) as e:
         raise ConfigException("Unable to load {}: {}.".format(filename,e))
 
 def load_hosts_config(filename=None):
@@ -94,12 +94,17 @@ def load_hosts_config(filename=None):
         hosts[hostname] = hc
     return hosts
 
-def global_config():
+def global_config(filename=None):
+    d = load_hosts_yaml(filename)
+    try: g = d['globals']
+    except KeyError: g = {}
+    if g is None: g = {}
     from pyfounder.server import app
-    return {
+    g.update({
         'pyfounder_ip' : app.config['PYFOUNDER_IP'],
         'pyfounder_url' : app.config['PYFOUNDER_URL'],
-    }
+    })
+    return g
 
 def host_config(hostname, hosts=None):
     if hosts is None:
@@ -185,6 +190,18 @@ def fetch_template(template_name, hostname):
             template_name, hostname, e))
     return rendered_content
 
+
+def fetch_template_pxe_discovery():
+    s = """default pyfounder-discovery
+timeout 0
+LABEL pyfounder-discovery
+        kernel pyfounder-discovery/vmlinuz
+        append initrd=pyfounder-discovery/initrd boot=live nomodeset fetch=tftp://{{pyfounder_ip}}/pyfounder-discovery/filesystem.squashfs PYFOUNDER_SERVER={{pyfounder_url}}
+"""
+    cfg = global_config()
+    from jinja2 import BaseLoader, Environment
+    t = Environment(loader=BaseLoader).from_string(s)
+    return t.render(**cfg)
 
 #def config_host_data(_hostdata, hosts_config=None):
 #    result = []

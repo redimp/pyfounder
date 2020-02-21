@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vim: set et ts=8 sts=4 sw=4 ai fenc=utf-8:
 
+import os
 import re
 from pprint import pformat, pprint
 
@@ -344,3 +345,13 @@ def api_install(mac,option=None):
     return "send command to reboot into preseed."
 
 
+@app.route('/api/setup')
+def api_setup():
+    messages = []
+    content = helper.fetch_template_pxe_discovery()
+    filename = os.path.join(helper.get_pxecfg_directory(), "default")
+    with open(filename, "w") as f:
+        f.write(content)
+    print(content)
+    messages.append("file: {} updated.".format(filename))
+    return "\n".join(messages)

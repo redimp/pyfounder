@@ -303,5 +303,11 @@ def host_template(hostname,template):
     txt = query_server("/fetch/{}/{}".format(hostname, template))
     click.echo(txt)
 
+@cli.command('setup')
+def serversetup():
+    """Setup server configuration"""
+    txt = query_server("/api/setup")
+    click.echo(txt)
+
 if __name__ == "__main__":
     cli()
