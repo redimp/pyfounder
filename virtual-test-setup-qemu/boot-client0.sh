@@ -1,6 +1,7 @@
 #!/bin/bash
 
-CLIENT_IMAGE=images/client0.qcow2
+[ "$WORK_DIR" == "" ] && WORK_DIR=$PWD
+[ "$CLIENT_IMAGE" == "" ] && CLIENT_IMAGE=$WORK_DIR/images/client0.qcow2
 
 mkdir -p $(dirname $CLIENT_IMAGE)
 
