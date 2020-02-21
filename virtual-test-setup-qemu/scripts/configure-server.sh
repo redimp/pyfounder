@@ -69,4 +69,25 @@ pyfounder /pyfounder 9p _netdev,trans=virtio,version=9p2000.L 0 0
 EOF
 
 mkdir -p /var/lib
-ln -s /pyfounder/virtual-test-setup/tftpboot /var/lib/tftpboot
+ln -s /pyfounder/virtual-test-setup-qemu/tftpboot /var/lib/tftpboot
+
+# run pyfounder provisioning in a screen session
+
+cat <<EOF >/etc/systemd/system/screen-pyfounder.service
+[Unit]
+Description=Run pyfounder server in screen session
+ConditionPathExists=/pyfounder/virtual-test-setup-qemu/scripts/pyfounder_server.sh
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/screen -dmS pyfounder /pyfounder/virtual-test-setup-qemu/scripts/run_pyfounder.sh
+ExecStop=/usr/bin/screen -S pyfounder -X quit
+TimeoutSec=0
+StandardOutput=tty
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# git doesn't like empty last lines

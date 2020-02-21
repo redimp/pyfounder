@@ -1,3 +1,4 @@
+setuptools
 Flask-SQLAlchemy
 Flask
 Flask-Testing
