@@ -151,6 +151,9 @@ def host_show(hostname, debug):
         if debug > 0:
             click.echo(pformat(host))
         name = host['name'] or '?'
+        for x in ['ip','mac','interface']:
+            if host[x] is None:
+                host[x] = '?'
         spacer = " " * len("[ {} ]".format(name))
         click.echo("[ {} ] ip {} mac {} interface {}".format(
             click.style(name, bold=True),
