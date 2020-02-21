@@ -4,18 +4,19 @@ globals:
 hosts:
   client0:
     class: default
+    mac: 52:54:98:76:54:35
     interface:
     ip: 10.0.70.2
 
 classes:
   default:
     templates:
-      pxelinux.cfg: example/pxe-localhdd
-      pxelinux.cfg-install: example/pxe-install-bionic
-      preseed.cfg: example/preseed.cfg
-      early_command.sh: example/early_default.sh
-      late_command.sh: example/late_command.sh
-      first_boot.sh: first_boot/first_workstation.sh
+      pxelinux.cfg: examples/pxe-localhdd
+      pxelinux.cfg-install: examples/pxe-install-bionic
+      preseed.cfg: examples/preseed.cfg
+      early_command.sh: examples/early_command.sh
+      late_command.sh: examples/late_command.sh
+      first_boot.sh: examples/firstboot.sh
     variables:
       apt_proxy: http://10.0.70.1:3142
 
