@@ -90,6 +90,6 @@ db.sqlite
 hosts.yaml
 app-data
 pyfounder.log*
-templates
+./templates
 
 .vscode
