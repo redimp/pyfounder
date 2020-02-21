@@ -5,6 +5,7 @@
 * run `script/bootstrap.sh`
 * check that you are in the `kvm` group, using `groups`. if not logout and login again.
 * make sure your current directory is writeable by root, if not set the `WORK_DIR` environment variable e.g. `export WORK_DIR=/tmp`
+* TODO check virtio
 
 ## Running the environment
 
