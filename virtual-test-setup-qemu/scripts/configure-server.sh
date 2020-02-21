@@ -54,6 +54,11 @@ virtio
 EOF
 
 
+cat << EOF >/etc/default/locale
+LC_ALL=C.UTF-8
+LANG=C.UTF-8
+EOF
+
 # disabled systemd-resolved
 systemctl disable systemd-resolved
 
@@ -73,13 +78,17 @@ ln -s /pyfounder/virtual-test-setup-qemu/tftpboot /var/lib/tftpboot
 
 # run pyfounder provisioning in a screen session
 
+chmod 777 /run/screen
+
 cat <<EOF >/etc/systemd/system/screen-pyfounder.service
 [Unit]
 Description=Run pyfounder server in screen session
-ConditionPathExists=/pyfounder/virtual-test-setup-qemu/scripts/pyfounder_server.sh
+ConditionPathExists=/pyfounder/virtual-test-setup-qemu/scripts/run_pyfounder.sh
+RequiresMountsFor=/pyfounder
 
 [Service]
 Type=simple
+ExecStartPre=/bin/chmod 777 /run/screen
 ExecStart=/usr/bin/screen -dmS pyfounder /pyfounder/virtual-test-setup-qemu/scripts/run_pyfounder.sh
 ExecStop=/usr/bin/screen -S pyfounder -X quit
 TimeoutSec=0
@@ -89,5 +98,7 @@ RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target
 EOF
+
+systemctl enable screen-pyfounder
 
 # git doesn't like empty last lines
