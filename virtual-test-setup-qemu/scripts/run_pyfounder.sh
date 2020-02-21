@@ -26,6 +26,7 @@ export LANG=C.UTF-8
 PIP=$(which pip3)
 
 cd /pyfounder
+$PIP install setuptools wheel
 $PIP install -U -r requirements.txt
 $PIP install -e .
 
