@@ -11,7 +11,7 @@ hosts:
 classes:
   default:
     templates:
-      pxelinux.cfg: examples/pxe-localhdd
+      pxelinux.cfg: examples/pxe-boot-localhdd
       pxelinux.cfg-install: examples/pxe-install-bionic
       preseed.cfg: examples/preseed.cfg
       early_command.sh: examples/early_command.sh
