@@ -170,6 +170,8 @@ def empty_or_None(s):
 
 def fetch_template(template_name, hostname):
     cfg = host_config(hostname)
+    from pprint import pprint
+    pprint(cfg)
     # find template filename
     try:
         template_file = cfg['templates'][template_name]
@@ -179,7 +181,7 @@ def fetch_template(template_name, hostname):
     try:
         rendered_content = configured_template(template_file,cfg)
     except Exception as e:
-        raise ConfigException("Template {} not configured for host {}\n{}".format(
+        raise ConfigException("Error configuring Template {} for host {}\n{}".format(
             template_name, hostname, e))
     return rendered_content
 
