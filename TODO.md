@@ -3,7 +3,7 @@
 ## TODO List
 
 - [ ] make netboot-discovery image smaller
-- [ ] write `pxelinux.cfg/default` from cli
+- [x] write `pxelinux.cfg/default` from cli
 
 ## Ideas
 

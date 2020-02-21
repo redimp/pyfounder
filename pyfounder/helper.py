@@ -176,7 +176,6 @@ def empty_or_None(s):
 def fetch_template(template_name, hostname):
     cfg = host_config(hostname)
     from pprint import pprint
-    pprint(cfg)
     # find template filename
     try:
         template_file = cfg['templates'][template_name]
