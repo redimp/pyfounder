@@ -46,7 +46,13 @@ cat << EOF >/etc/dnsmasq.hosts
 10.0.70.3	client1
 EOF
 
-cat /etc/dnsmasq.conf
+cat << EOF >/etc/modprobe.d/virtio
+9p
+9pnet
+9pnet_virtio
+virtio
+EOF
+
 
 # disabled systemd-resolved
 systemctl disable systemd-resolved
@@ -59,5 +65,8 @@ mkdir -p /pyfounder
 # create fstab
 cat << EOF >/etc/fstab
 /dev/sda / ext4 errors=remount-ro,acl 0 1
-pyfounder /pyfounder 9p trans=virtio,version=9p2000.L 0 0
+pyfounder /pyfounder 9p _netdev,trans=virtio,version=9p2000.L 0 0
 EOF
+
+mkdir -p /var/lib
+ln -s /pyfounder/virtual-test-setup/tftpboot /var/lib/tftpboot
