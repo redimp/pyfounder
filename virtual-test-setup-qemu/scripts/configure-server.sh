@@ -88,7 +88,7 @@ RequiresMountsFor=/pyfounder
 
 [Service]
 Type=simple
-ExecStartPre=/bin/chmod 777 /run/screen
+# ExecStartPre=/bin/chmod 777 /run/screen
 ExecStart=/usr/bin/screen -dmS pyfounder /pyfounder/virtual-test-setup-qemu/scripts/run_pyfounder.sh
 ExecStop=/usr/bin/screen -S pyfounder -X quit
 TimeoutSec=0

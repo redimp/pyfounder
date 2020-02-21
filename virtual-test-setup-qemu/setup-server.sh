@@ -13,7 +13,7 @@ mkdir -p $(dirname $SERVER_IMAGE)
 
 test -f ${TARGET_ROOT}/bin/bash || {
     sudo debootstrap --arch=${ARCH} \
-        --include screen,iptables,python3-dev,python3-pip,gnupg2,vim,dnsmasq,ifupdown,openssh-server,iputils-ping,isc-dhcp-client,bash,init,net-tools,linux-image-${ARCH} \
+        --include apt-cacher-ng,screen,iptables,python3-dev,python3-pip,gnupg2,vim,dnsmasq,ifupdown,openssh-server,iputils-ping,isc-dhcp-client,bash,init,net-tools,linux-image-${ARCH} \
         --variant=minbase stretch $TARGET_ROOT \
         http://ftp.de.debian.org/debian/
 }
@@ -28,7 +28,7 @@ sudo cp $SCRIPTS_DIR/configure-server.sh $TARGET_ROOT/
 
 sudo chroot $TARGET_ROOT /bin/bash -x /configure-server.sh
 
-sudo chown -R root:root ${TARGET_ROOT}
+#sudo chown -R root:root ${TARGET_ROOT}
 
 test -f $SERVER_IMAGE || {
     # create image
