@@ -22,11 +22,12 @@ hosts:
     class: workstation
 
 classes:
-  default: 
+  default:
     templates: &default_temlates
       pxelinux.cfg: pxe/boot-local
       pxelinux.cfg-install: pxe/install-bionic
       preseed.cfg: pressed.cfg/default
+      test-snippets: test-snippets
     variables: &default_variables
       test: one
       locale: en_US.UTF-8
@@ -47,12 +48,17 @@ LABEL install
         append vga=normal initrd=bionic/ubuntu-installer/amd64/initrd.gz locale={{locale}} debian-installer/keymap=us pkgsel/install-language-support=false netcfg/dhcp_timeout=120 console-setup/layoutcode=us console-setup/ask_detect=false netcfg/choose_interface={{interface}}
 """
 
+TEST_SNIPPETS = """
+wget -q -O /dev/null {{pyfounder_url}}/report/state/{{mac}}/early_command
+"""
+
 
 class TestApp(object):
     def __init__(self):
         self.app = pyfounder.server.app
         self._test_client = self.app.test_client()
         self.tempdir = tempfile.TemporaryDirectory()
+        self.app.config['PYFOUNDER_URL'] = "http://127.0.0.1:5000"
         self.app.config['SERVER_NAME'] = 'localhost.localdomain'
         self.app.config['PXECFG_DIRECTORY'] = os.path.join(self.tempdir.name,'pxelinux.cfg')
         mkdir_p(self.app.config['PXECFG_DIRECTORY'])
@@ -65,6 +71,8 @@ class TestApp(object):
             f.write(TEST_PXE_INSTALL_BIONIC)
         with open(self.app.config['PYFOUNDER_HOSTS'],'w') as f:
             f.write(TEST_HOSTS_YML)
+        with open(os.path.join(self.app.config['PYFOUNDER_TEMPLATES'],'test-snippets'),'w') as f:
+            f.write(TEST_SNIPPETS)
 
     def __del__(self):
         self.tempdir.cleanup()
@@ -163,6 +171,15 @@ class DiscoverTest(PyfounderTestCaseBase):
         rv = self.test_client.get('/discovery-remote-control/{}'.format(mac))
         response = rv.data.decode()
         self.assertEqual(response, 'wait')
+
+class SnippetTest(PyfounderTestCaseBase):
+    def test_status_update(self):
+        rv = self.test_client.get('/fetch/example1/test-snippets',
+                follow_redirects=True)
+        response = rv.data.decode()
+        # check for wget option
+        self.assertIn('wget -q -O /dev/null http://127.0.0.1:5000/report/state/00:11:22:33:aa:55/early_command',response)
+
 
 if __name__ == '__main__':
     unittest.main()
