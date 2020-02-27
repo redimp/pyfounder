@@ -138,6 +138,30 @@ def mkdir_p(path):
         else:
             raise
 
+def template_pyfounder_update_status(cfg, status="unknown"):
+    tpl = """# pyfounder_update_status("{status}")
+if [ -x /bin/curl ]; then
+    /bin/curl -o /dev/null --silent {url}/report/state/{mac}/{status}
+elif [ -x /bin/wget ]; then
+    /bin/wget -q -O /dev/null {url}/report/state/{mac}/{status}
+elif [ -x /usr/bin/wget ]; then
+    /usr/bin/wget -q -O /dev/null {url}/report/state/{mac}/{status}
+else
+    wget -q -O /dev/null {url}/report/state/{mac}/{status}
+fi
+    """
+
+    try:
+        snippet = tpl.format(
+            url = cfg['pyfounder_url'],
+            mac = cfg['mac'],
+            status = status
+            )
+    except Exception as e:
+        estr = '{}: {}'.format(type(e).__name__, e)
+        return "# Error in {{ pyfounder_update_status("+status+") }}: " + estr
+    return snippet
+
 def configured_template(template_file, cfg={}):
     # load the jinja stuff
     from jinja2 import FileSystemLoader, Environment
@@ -154,6 +178,10 @@ def configured_template(template_file, cfg={}):
         template = env.get_template(template_file)
     except jinja2.exceptions.TemplateNotFound as e:
         raise ConfigException("Template {} not found.".format(template_file))
+    # add custom functions
+    template.globals['pyfounder_update_status'] = \
+            lambda x: template_pyfounder_update_status(cfg, x)
+
     # render
     rendered_content = template.render(**context)
     return rendered_content

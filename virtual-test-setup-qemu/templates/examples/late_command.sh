@@ -1,5 +1,5 @@
 #!/bin/sh
-wget -q -O /dev/null {{pyfounder_url}}/report/state/{{mac}}/late_command
+{{ pyfounder_update_status("late_command") }}
 
 # install some core packages
 DEBIAN_FRONTEND=noninteractive apt-install --install-recommends vim ssh python
@@ -12,4 +12,4 @@ chmod +x /target/root/pyfounder/first_boot.sh
 # activate first_boot script
 echo "@reboot root bash /root/pyfounder/first_boot.sh pyfounder 2>&1 | /usr/bin/logger -t pyfounder && mv /etc/cron.d/pyfounder_first_boot /root/pyfounder" > /target/etc/cron.d/pyfounder_first_boot
 
-wget -q -O /dev/null {{pyfounder_url}}/report/state/{{mac}}/late_command_done
+{{ pyfounder_update_status("late_command_done") }}

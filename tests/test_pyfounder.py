@@ -49,7 +49,7 @@ LABEL install
 """
 
 TEST_SNIPPETS = """
-wget -q -O /dev/null {{pyfounder_url}}/report/state/{{mac}}/early_command
+{{ pyfounder_update_status("early_command") }}
 """
 
 
@@ -177,6 +177,7 @@ class SnippetTest(PyfounderTestCaseBase):
         rv = self.test_client.get('/fetch/example1/test-snippets',
                 follow_redirects=True)
         response = rv.data.decode()
+        print(response)
         # check for wget option
         self.assertIn('wget -q -O /dev/null http://127.0.0.1:5000/report/state/00:11:22:33:aa:55/early_command',response)
 
