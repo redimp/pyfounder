@@ -106,7 +106,7 @@ class InstallTest(ClientLiveServerTest):
         result = self.run_founder(["install", "example1"])
         self.assertNotIn('Host is not discovered yet.', result.output)
         self.assertNotIn('No matching hosts found.', result.output)
-        self.assertIn('example1 replied send command to reboot into preseed.', result.output)
+        self.assertIn('[ example1 ] send command to reboot into preseed.', result.output)
         # check remote command
         response = self.requests_get("/discovery-remote-control/00:11:22:33:aa:55")
         self.assertEqual('reboot',response.text)
@@ -145,7 +145,7 @@ class InstallTest(ClientLiveServerTest):
         self.assertIn('Error: Host is already installed.', result.output)
         #self.assertNotEqual(0, result.exit_code)
         result = self.run_founder(["install", "example1", "--force"])
-        self.assertIn('example1 replied send command to reboot into preseed.', result.output)
+        self.assertIn('[ example1 ] send command to reboot into preseed.', result.output)
         # check pxe file
         self._assert_boot_installer_example1()
         # check remote command

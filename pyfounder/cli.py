@@ -254,7 +254,9 @@ def send_api_command(hostname, command, option=None):
             raise click.ClickException("{}".format(e))
         except requests.exceptions.ConnectionError:
             raise click.ClickException("Unable to connect to the server.")
-        click.echo('{} replied {}'.format(host['name'] or host['mac'],reply))
+        click.echo('[ {} ] {}'.format(
+            click.style(host['name'] or host['mac'], bold=True),
+            reply))
 
 @cli.command('rediscover')
 @click.argument('hostname', nargs=-1)
