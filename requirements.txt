@@ -1,4 +1,5 @@
 setuptools
+Werkzeug==0.16.1
 Flask-SQLAlchemy
 Flask
 Flask-Testing
