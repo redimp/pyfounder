@@ -212,6 +212,24 @@ def dnsmasq(hostname):
             comment = "# "
         click.echo("{}dhcp-host={},{},{}".format(comment, h['mac'] or '?',h['name'] or '?',h['ip'] or '?'))
 
+@cli.command('dhcp')
+@click.argument('hostname', nargs=-1)
+def dhcp(hostname):
+    """Print isc-dhcpd configuration"""
+    data = host_query(hostname)
+    if data is None or len(data)<1:
+        raise click.ClickException("No hosts found. Hint: Use % as wildcard.")
+    for h in data:
+        h['prefix'] = ''
+        if empty_or_None(h['mac']) or empty_or_None(h['name']) or empty_or_None(h['ip']):
+            h['prefix'] = "# "
+        if empty_or_None(h['name']): h['name'] = '?'
+        click.echo("""{prefix}host {name} {{
+{prefix}    hardware ethernet {mac};
+{prefix}    fixed-address {ip};
+{prefix}    option host-name "{name}";
+{prefix}}}""".format(**h))
+
 
 @cli.command('yaml')
 @click.argument('hostname', nargs=-1)
