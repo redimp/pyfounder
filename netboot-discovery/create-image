@@ -21,7 +21,7 @@ mkdir -p ${TARGET}
 test -f ${TARGET}/chroot/bin/bash || sudo debootstrap \
     --arch=${ARCH} \
     --variant=minbase \
-    stretch \
+    buster \
     ${TARGET}/chroot \
     http://ftp.de.debian.org/debian/
 
@@ -52,15 +52,6 @@ mkdir -p ${IMAGE_TARGET_DIR}
 
 set -x
 
-# copy kernel and initrd
-cp $(ls -1 ${TARGET}/chroot/boot/vmlinuz-* | tail -1) \
-    ${IMAGE_TARGET_DIR}/vmlinuz && \
-cp $(ls -1 ${TARGET}/chroot/boot/initrd.img-* | tail -1) \
-    ${IMAGE_TARGET_DIR}/initrd
-
-# TODO remove vmlinuz and initrd from chroot-final to free space?
-#      or even everything in /boot?
-
 # recreate squashfs
 rm -f ${IMAGE_TARGET_DIR}/filesystem.squashfs
 
@@ -71,6 +62,12 @@ sudo mksquashfs \
     ${TARGET}/chroot-final \
     $T/filesystem.squashfs \
     -e boot
+
+# copy kernel and initrd
+cp -v $(ls -1 ${TARGET}/chroot/boot/vmlinuz-* | tail -1) \
+    ${IMAGE_TARGET_DIR}/vmlinuz && \
+cp -v $(ls -1 ${TARGET}/chroot/boot/initrd.img-* | tail -1) \
+    ${IMAGE_TARGET_DIR}/initrd
 
 cp  ${T}/filesystem.squashfs ${IMAGE_TARGET_DIR}/filesystem.squashfs
 
