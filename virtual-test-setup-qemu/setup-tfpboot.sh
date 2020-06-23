@@ -3,8 +3,9 @@
 set -e
 
 [ "$WORK_DIR" == "" ] && WORK_DIR=$PWD
-TARGET_DIR=${WORK_DIR}/tftpboot
+[ "$TARGET_DIR" == "" ] && TARGET_DIR=${WORK_DIR}/tftpboot
 RELEASE=bionic
+NETBOOT_DISCOVERY_DIR=$(dirname $0)/../netboot-discovery
 
 # test -d $TARGET_DIR/pxelinux.cfg || { echo "Error: Missing $TARGET_DIR/pxelinux.cfg."; exit 1; }
 mkdir -p $TARGET_DIR/pxelinux.cfg
@@ -14,7 +15,7 @@ for F in vmlinuz initrd filesystem.squashfs; do
 		mkdir -p $TARGET_DIR/pyfounder-discovery
 		test -f ../netboot-discovery/image/$F || \
 			{ echo "Error: ../netboot-discovery/image/$F not found."; exit 1; }
-		cp ../netboot-discovery/image/$F $TARGET_DIR/pyfounder-discovery/$F
+		cp ${NETBOOT_DISCOVERY_DIR}/image/$F $TARGET_DIR/pyfounder-discovery/$F
 	fi
 done
 
