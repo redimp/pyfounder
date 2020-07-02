@@ -310,16 +310,17 @@ def api_remove_state(mac,states):
 def api_remove(mac):
     # find host
     host = get_host(mac)
-    hi = host.get_hostinfo()
-    app.logger.warning('Removing {} {}.'.format(host['name'] or '?',mac))
-    # remove pxelinux.cfg/<mac>
     host.remove_pxelinux_cfg()
+    # remove pxelinux.cfg/<mac>
+    app.logger.warning('Removing {} {}.'.format(host['name'] or '?',mac))
     # remove Host from database
     HostCommand.query.filter_by(mac=mac).delete()
     HostInfo.query.filter_by(mac=mac).delete()
     db.session.commit()
+    if host.in_config_file:
+        return "removed from database, still configured in hosts file."
     # "send:" reboot command
-    return "ok."
+    return "removed from database."
 
 @app.route('/api/install/<mac>')
 @app.route('/api/install/<mac>/<option>')

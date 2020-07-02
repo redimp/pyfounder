@@ -19,11 +19,15 @@ class Host:
             'class' : None,
             'state' : '',
         }
+        self.in_config_file = False
+        self.in_database = False
         if name is not None:
             self.data['name'] = name
         if _dict is not None:
+            self.in_config_file = True
             self.from_dict(_dict)
         if _model is not None:
+            self.in_database = True
             self.from_db(_model)
 
     def __repr__(self):
@@ -102,11 +106,13 @@ class Host:
         db.session.add(cmd)
         db.session.commit()
 
-    def get_hostinfo(self):
+    def get_hostinfo(self, create_if_not_exists=True):
         self.__assert_mac()
         from pyfounder.models import HostInfo
         host_info = HostInfo.query.filter_by(mac=self.data['mac']).first()
         if host_info is None:
+            if not create_if_not_exists:
+                return None
             # create host_info
             host_info = HostInfo(mac=self.data['mac'])
             # add infos if available
