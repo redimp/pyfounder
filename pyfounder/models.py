@@ -20,7 +20,7 @@ class HostInfo(db.Model):
     discovery_yaml = db.Column(db.Text)
 
     def __repr__(self):
-        return "<Host {} {} {}>".format(self.id, self.name or '?', self.mac or '?')
+        return "<HostInfo {} {} {}>".format(self.id, self.name or '?', self.mac or '?')
 
     def get_states(self):
         if self.state is None:
