@@ -32,31 +32,50 @@ LABEL localboot
 MENU LABEL Boot Local HDD
 LOCALBOOT  0"""
 
+TEST_GRUB_LOCAL_BOOT = """
+"""
+
 
 class InstallTest(ClientLiveServerTest):
 
     def _assert_boot_local_example1(self):
+        # enable diff of long strings
+        self.maxDiff = None
+        # pxe
         example1_pxe_filepath = os.path.join(self.flask_app.config['PXECFG_DIRECTORY'],
             '01-00-11-22-33-aa-55')
         with open(example1_pxe_filepath,'r') as f:
             example1_pxe = f.read()
-        # enable diff of long strings
-        self.maxDiff = None
         # render template for host
         example1_pxe_template = pyfounder.helper.fetch_template('pxelinux.cfg', 'example1')
         self.assertEqual(example1_pxe.strip(), example1_pxe_template.strip() )
+        # grub
+        example1_grub_filepath = os.path.join(self.flask_app.config['GRUBCFG_DIRECTORY'],
+                'grub.cfg-00:11:22:33:aa:55')
+        with open(example1_grub_filepath,'r') as f:
+            example1_grub = f.read()
+        example1_grub_template = pyfounder.helper.fetch_template('grub.cfg', 'example1')
+        self.assertEqual(example1_grub.strip(), example1_grub_template.strip() )
 
     def _assert_boot_installer_example1(self):
+        # enable diff of long strings
+        self.maxDiff = None
         # check pxe file
         example1_pxe_filepath = os.path.join(self.flask_app.config['PXECFG_DIRECTORY'],
             '01-00-11-22-33-aa-55')
         with open(example1_pxe_filepath,'r') as f:
             example1_pxe = f.read()
-        # enable diff of long strings
-        self.maxDiff = None
         # render template for host
         example1_pxe_template = pyfounder.helper.fetch_template('pxelinux.cfg-install', 'example1')
         self.assertEqual(example1_pxe.strip(), example1_pxe_template.strip() )
+        # grub
+        example1_grub_filepath = os.path.join(self.flask_app.config['GRUBCFG_DIRECTORY'],
+                'grub.cfg-00:11:22:33:aa:55')
+        with open(example1_grub_filepath,'r') as f:
+            example1_grub = f.read()
+        # render template
+        example1_grub_template = pyfounder.helper.fetch_template('grub.cfg-install', 'example1')
+        self.assertEqual(example1_grub.strip(), example1_grub_template.strip() )
 
     def test_install_process(self):
         self.configure_client()
@@ -64,6 +83,9 @@ class InstallTest(ClientLiveServerTest):
         with open(os.path.join(self.flask_app.config['PYFOUNDER_TEMPLATES']
                 ,'pxe','boot-local'),'w') as f:
             f.write(TEST_PXE_LOCAL_BOOT)
+        with open(os.path.join(self.flask_app.config['PYFOUNDER_TEMPLATES']
+                ,'grub','boot-local'),'w') as f:
+            f.write(TEST_GRUB_LOCAL_BOOT)
         with open(self.flask_app.config['PYFOUNDER_HOSTS'],'w') as f:
             f.write(TEST_HOSTS_YML)
         # start with empty hosts file:

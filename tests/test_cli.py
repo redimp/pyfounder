@@ -14,7 +14,7 @@ from flask import Flask
 from pyfounder.helper import mkdir_p
 from click.testing import CliRunner
 from flask_testing import LiveServerTestCase
-from test_pyfounder import TEST_PXE_INSTALL_BIONIC, TEST_HOSTS_YML
+from test_pyfounder import TEST_PXE_INSTALL_BIONIC, TEST_HOSTS_YML, TEST_GRUB_INSTALL_BIONIC
 
 class ClientLiveServerTest(LiveServerTestCase):
 
@@ -41,11 +41,18 @@ class ClientLiveServerTest(LiveServerTestCase):
             f.write(TEST_HOSTS_YML)
         # pxe/
         mkdir_p(self.flask_app.config['PXECFG_DIRECTORY'])
+        # grub/
+        mkdir_p(self.flask_app.config['GRUBCFG_DIRECTORY'])
         # templates/
         mkdir_p(self.flask_app.config['PYFOUNDER_TEMPLATES'])
+        # templates/pxe
         mkdir_p(os.path.join(self.flask_app.config['PYFOUNDER_TEMPLATES'],'pxe'))
         with open(os.path.join(self.flask_app.config['PYFOUNDER_TEMPLATES'],'pxe','install-bionic'),'w') as f:
             f.write(TEST_PXE_INSTALL_BIONIC)
+        # templates/grub
+        mkdir_p(os.path.join(self.flask_app.config['PYFOUNDER_TEMPLATES'],'grub'))
+        with open(os.path.join(self.flask_app.config['PYFOUNDER_TEMPLATES'],'grub','install-bionic'),'w') as f:
+            f.write(TEST_GRUB_INSTALL_BIONIC)
 
     def tearDown(self):
         # clean up temp dir
@@ -70,6 +77,7 @@ class ClientLiveServerTest(LiveServerTestCase):
         # WARNING: Setting a SERVER_NAME breaks flask-testing
         #self.flask_app.config['SERVER_NAME'] = 'localhost'
         self.flask_app.config['PXECFG_DIRECTORY'] = os.path.join(self.tempdir,'pxelinux.cfg')
+        self.flask_app.config['GRUBCFG_DIRECTORY'] = os.path.join(self.tempdir,'grub')
         self.flask_app.config['PYFOUNDER_HOSTS'] =  os.path.join(self.tempdir,'hosts.yaml')
         self.flask_app.config['PYFOUNDER_TEMPLATES'] = os.path.join(self.tempdir,'templates')
 

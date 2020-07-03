@@ -333,25 +333,28 @@ def api_remove(mac):
 @app.route('/api/install/<mac>')
 @app.route('/api/install/<mac>/<option>')
 def api_install(mac,option=None):
-    # find host
-    host = get_host(mac)
-    hi = host.get_hostinfo()
-    # check if host is already installed
-    if hi is not None and hi.has_state('installed') and (option is None or "force" not in option):
-        return "Error: Host is already installed. Please use --force if you want to reinstall."
-    if hi is None or not hi.has_state('discovered'):
-        return "Error: Host is not discovered yet."
-    # check host infos
-    if helper.empty_or_None(host.data['name']):
-        return "Error: No name configured yet."
-    # write install pxelinux.cfg/<mac>
-    #host.update_pxelinux_cfg("install")
-    host.enter_state("reboot_into_preseed")
-    host.send_command('reboot', add_state='booting_into_preseed')
-    #hi.remove_state("installed")
-    db.session.add(hi)
-    db.session.commit()
-    return "send command to reboot into preseed."
+    try:
+        # find host
+        host = get_host(mac)
+        hi = host.get_hostinfo()
+        # check if host is already installed
+        if hi is not None and hi.has_state('installed') and (option is None or "force" not in option):
+            return "Error: Host is already installed. Please use --force if you want to reinstall."
+        if hi is None or not hi.has_state('discovered'):
+            return "Error: Host is not discovered yet."
+        # check host infos
+        if helper.empty_or_None(host.data['name']):
+            return "Error: No name configured yet."
+        # write install pxelinux.cfg/<mac>
+        #host.update_pxelinux_cfg("install")
+        host.enter_state("reboot_into_preseed")
+        host.send_command('reboot', add_state='booting_into_preseed')
+        #hi.remove_state("installed")
+        db.session.add(hi)
+        db.session.commit()
+        return "send command to reboot into preseed."
+    except ConfigException as e:
+        return "Error: {}".format(e)
 
 
 @app.route('/api/setup')

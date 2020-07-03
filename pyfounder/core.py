@@ -71,6 +71,22 @@ class Host:
             return
         os.remove(fn)
 
+    def __grub_cfg_filename(self):
+        self.__assert_mac()
+        fn = "grub.cfg-{}".format(self.data['mac'])
+        return os.path.join(helper.get_grubcfg_directory(), fn.lower())
+
+    def write_grub_cfg(self, content):
+        fn = self.__grub_cfg_filename()
+        with open(fn, 'w') as f:
+            f.write(content)
+
+    def remove_grub_cfg(self):
+        fn = self.__grub_cfg_filename()
+        if not os.path.exists(fn):
+            return
+        os.remove(fn)
+
     def update_pxelinux_cfg(self, task=None):
         if task in ['default', 'local']:
             pxe_config = helper.fetch_template('pxelinux.cfg', self.data['name'])
@@ -81,14 +97,26 @@ class Host:
         else:
             raise RuntimeError("write_pxelinux_cfg: unknown task {}".format(task))
 
+    def update_grub_cfg(self, task=None):
+        if task in ['default', 'local']:
+            grub_config = helper.fetch_template('grub.cfg', self.data['name'])
+            self.write_grub_cfg(grub_config)
+        elif task == 'install':
+            grub_config = helper.fetch_template('grub.cfg-install', self.data['name'])
+            self.write_grub_cfg(grub_config)
+        else:
+            raise RuntimeError("write_pxelinux_cfg: unknown task {}".format(task))
+
     def update_boot_cfg(self):
         hi = self.get_hostinfo()
         if hi is None:
             # remove pxe config, host should boot into default == discovery
             self.remove_pxelinux_cfg()
         if hi.has_state("boot-local") or hi.has_state("installed"):
+            self.update_grub_cfg("default")
             self.update_pxelinux_cfg("default")
         elif hi.has_state("boot-install"):
+            self.update_grub_cfg("install")
             self.update_pxelinux_cfg("install")
         else:
             self.remove_pxelinux_cfg()

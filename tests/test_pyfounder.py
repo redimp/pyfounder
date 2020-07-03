@@ -26,6 +26,7 @@ classes:
     templates: &default_temlates
       pxelinux.cfg: pxe/boot-local
       pxelinux.cfg-install: pxe/install-bionic
+      grub.cfg: grub/boot-local
       grub.cfg-install: grub/install-bionic
       preseed.cfg: preseed.cfg/default
       test-snippets: test-snippets
@@ -87,14 +88,18 @@ class TestApp(object):
         self.app.config['PYFOUNDER_TEMPLATES'] = os.path.join(self.tempdir.name,'templates')
         mkdir_p(self.app.config['PYFOUNDER_TEMPLATES'])
         # write files
+        # pxe
         mkdir_p(os.path.join(self.app.config['PYFOUNDER_TEMPLATES'],'pxe'))
         with open(os.path.join(self.app.config['PYFOUNDER_TEMPLATES'],'pxe','install-bionic'),'w') as f:
             f.write(TEST_PXE_INSTALL_BIONIC)
+        # grub
         mkdir_p(os.path.join(self.app.config['PYFOUNDER_TEMPLATES'],'grub'))
         with open(os.path.join(self.app.config['PYFOUNDER_TEMPLATES'],'grub','install-bionic'),'w') as f:
             f.write(TEST_GRUB_INSTALL_BIONIC)
+        # hosts
         with open(self.app.config['PYFOUNDER_HOSTS'],'w') as f:
             f.write(TEST_HOSTS_YML)
+        # test snippet
         with open(os.path.join(self.app.config['PYFOUNDER_TEMPLATES'],'test-snippets'),'w') as f:
             f.write(TEST_SNIPPETS)
 

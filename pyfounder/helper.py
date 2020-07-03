@@ -36,7 +36,7 @@ def get_pxecfg_directory():
     from pyfounder.server import app
     p = app.config['PXECFG_DIRECTORY']
     if not len(p)>0:
-        raise ConfigException("Not configured.".format(p))
+        raise ConfigException("PXECFG_DIRECTORY not configured.".format(p))
     if not os.path.isdir(p):
         raise ConfigException("Directory {} not found.".format(p))
     if not os.access(p, os.W_OK):
@@ -47,7 +47,7 @@ def get_grubcfg_directory():
     from pyfounder.server import app
     p = app.config['GRUBCFG_DIRECTORY']
     if not len(p)>0:
-        raise ConfigException("Not configured.".format(p))
+        raise ConfigException("GRUBCFG_DIRECTORY not configured.".format(p))
     if not os.path.isdir(p):
         raise ConfigException("Directory {} not found.".format(p))
     if not os.access(p, os.W_OK):
@@ -58,7 +58,7 @@ def get_hosts_yaml():
     from pyfounder.server import app
     p = app.config['PYFOUNDER_HOSTS']
     if not len(p)>0:
-        raise ConfigException("Not configured.".format(p))
+        raise ConfigException("PYFOUNDER_HOSTS not configured.".format(p))
     if not os.path.isfile(p):
         raise ConfigException("File {} not found.".format(p))
     if not os.access(p, os.R_OK):
@@ -69,7 +69,7 @@ def get_template_directory():
     from pyfounder.server import app
     p = app.config['PYFOUNDER_TEMPLATES']
     if not len(p)>0:
-        raise ConfigException("Not configured.".format(p))
+        raise ConfigException("PYFOUNDER_TEMPLATES not configured.".format(p))
     if not os.path.isdir(p):
         raise ConfigException("Directory {} not found.".format(p))
     return p
