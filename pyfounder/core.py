@@ -93,6 +93,9 @@ class Host:
         else:
             self.remove_pxelinux_cfg()
 
+    def remove_boot_cfg(self):
+        self.remove_pxelinux_cfg()
+
     def send_command(self, command, add_state=None, remove_state=None):
         self.__assert_mac()
         from pyfounder.models import HostCommand
