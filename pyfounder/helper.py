@@ -43,6 +43,17 @@ def get_pxecfg_directory():
         raise ConfigException("Directory {} is not writeable.".format(p))
     return p
 
+def get_grubcfg_directory():
+    from pyfounder.server import app
+    p = app.config['GRUBCFG_DIRECTORY']
+    if not len(p)>0:
+        raise ConfigException("Not configured.".format(p))
+    if not os.path.isdir(p):
+        raise ConfigException("Directory {} not found.".format(p))
+    if not os.access(p, os.W_OK):
+        raise ConfigException("Directory {} is not writeable.".format(p))
+    return p
+
 def get_hosts_yaml():
     from pyfounder.server import app
     p = app.config['PYFOUNDER_HOSTS']

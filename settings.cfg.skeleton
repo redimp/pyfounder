@@ -8,6 +8,10 @@ SQLALCHEMY_DATABASE_URI = ''
 # e.g. PXECFG_DIRECTORY=/var/lib/tftpboot/pxelinux.cfg
 PXECFG_DIRECTORY = ''
 
+# grub directory
+# e.g. GRUBCFG_DIRECTORY=/var/lib/tftpboot/grub
+GRUBCFG_DIRECTORY = ''
+
 # the hosts file (reload via `founder reload`)
 # e.g. '/path/to/hosts.yaml'
 PYFOUNDER_HOSTS = ''

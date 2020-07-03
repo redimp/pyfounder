@@ -26,7 +26,8 @@ classes:
     templates: &default_temlates
       pxelinux.cfg: pxe/boot-local
       pxelinux.cfg-install: pxe/install-bionic
-      preseed.cfg: pressed.cfg/default
+      grub.cfg-install: grub/install-bionic
+      preseed.cfg: preseed.cfg/default
       test-snippets: test-snippets
     variables: &default_variables
       test: one
@@ -41,11 +42,29 @@ classes:
 """
 
 TEST_PXE_INSTALL_BIONIC = """default install
+default pyfounder-discovery
+
 timeout 0
+LABEL pyfounder-discovery
+        kernel pyfounder-discovery/vmlinuz
+        append initrd=pyfounder-discovery/initrd boot=live nomodeset fetch=tftp://129.26.142.100/pyfounder-discovery/filesystem.squashfs PYFOUNDER_SERVER={{pyfounder_url}} live-media-timeout=60 ETHDEV_TIMEOUT=60
 
 LABEL install
         kernel bionic/ubuntu-installer/amd64/linux
         append vga=normal initrd=bionic/ubuntu-installer/amd64/initrd.gz locale={{locale}} debian-installer/keymap=us pkgsel/install-language-support=false netcfg/dhcp_timeout=120 console-setup/layoutcode=us console-setup/ask_detect=false netcfg/choose_interface={{interface}}
+default pyfounder-discovery
+"""
+
+TEST_GRUB_INSTALL_BIONIC = """
+menuentry 'pyfounder discovery' --id pyfounder_discovery {
+        linux pyfounder-discovery/vmlinuz boot=live nomodeset fetch=tftp://129.26.142.100/pyfounder-discovery/filesystem.squashfs PYFOUNDER_SERVER={{pyfounder_url}} live-media-timeout=60 ETHDEV_TIMEOUT=60
+        initrd pyfounder-discovery/initrd
+}
+
+menuentry 'bionic installer' -id bionic_installer {
+        linux bionic/ubuntu-installer/amd64/linux vga=normal initrd=bionic/ubuntu-installer/amd64/initrd.gz locale={{locale}} debian-installer/keymap=us pkgsel/install-language-support=false netcfg/dhcp_timeout=120 console-setup/layoutcode=us console-setup/ask_detect=false
+        initrd bionic/ubuntu-installer/amd64/initrd.gz
+}
 """
 
 TEST_SNIPPETS = """
@@ -62,6 +81,8 @@ class TestApp(object):
         self.app.config['SERVER_NAME'] = 'localhost.localdomain'
         self.app.config['PXECFG_DIRECTORY'] = os.path.join(self.tempdir.name,'pxelinux.cfg')
         mkdir_p(self.app.config['PXECFG_DIRECTORY'])
+        self.app.config['GRUBCFG_DIRECTORY'] = os.path.join(self.tempdir.name,'grub')
+        mkdir_p(self.app.config['GRUBCFG_DIRECTORY'])
         self.app.config['PYFOUNDER_HOSTS'] =  os.path.join(self.tempdir.name,'hosts.yaml')
         self.app.config['PYFOUNDER_TEMPLATES'] = os.path.join(self.tempdir.name,'templates')
         mkdir_p(self.app.config['PYFOUNDER_TEMPLATES'])
@@ -69,6 +90,9 @@ class TestApp(object):
         mkdir_p(os.path.join(self.app.config['PYFOUNDER_TEMPLATES'],'pxe'))
         with open(os.path.join(self.app.config['PYFOUNDER_TEMPLATES'],'pxe','install-bionic'),'w') as f:
             f.write(TEST_PXE_INSTALL_BIONIC)
+        mkdir_p(os.path.join(self.app.config['PYFOUNDER_TEMPLATES'],'grub'))
+        with open(os.path.join(self.app.config['PYFOUNDER_TEMPLATES'],'grub','install-bionic'),'w') as f:
+            f.write(TEST_GRUB_INSTALL_BIONIC)
         with open(self.app.config['PYFOUNDER_HOSTS'],'w') as f:
             f.write(TEST_HOSTS_YML)
         with open(os.path.join(self.app.config['PYFOUNDER_TEMPLATES'],'test-snippets'),'w') as f:
@@ -96,15 +120,30 @@ class ConfigTest(PyfounderTestCaseBase):
         self.assertIn('PYFOUNDER_HOSTS', response)
         self.assertIn('PYFOUNDER_TEMPLATES', response)
         self.assertIn('PXECFG_DIRECTORY', response)
+        self.assertIn('GRUBCFG_DIRECTORY', response)
 
-    def test_host_config(self):
+    def test_host_pxeconfig(self):
         rv = self.test_client.get('/fetch/example1/pxelinux.cfg-install',
                 follow_redirects=True)
         response = rv.data.decode()
+        # test grub context
+        self.assertIn('LABEL', response)
         # test simple variable
         self.assertIn('netcfg/choose_interface=enp0s8', response)
         # test variable from inherited class
         self.assertIn('locale=en_US.UTF-8', response)
+        # test variable from settings
+        self.assertIn('PYFOUNDER_SERVER=http://127.0.0.1:5000', response)
+
+    def test_host_grubconfig(self):
+        rv = self.test_client.get('/fetch/example1/grub.cfg-install',
+                follow_redirects=True)
+        response = rv.data.decode()
+        # test grub context
+        self.assertIn('menuentry', response)
+        # test variable from inherited class
+        self.assertIn('locale=en_US.UTF-8', response)
+        self.assertIn('PYFOUNDER_SERVER=http://127.0.0.1:5000', response)
 
 class DiscoverTest(PyfounderTestCaseBase):
     def test_version(self):

@@ -8,6 +8,7 @@ LOG_DIR = '.'  # create log files in current working directory
 SQLALCHEMY_DATABASE_URI = 'sqlite://'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 PXECFG_DIRECTORY = ''
+GRUBCFG_DIRECTORY = ''
 PYFOUNDER_HOSTS = ''
 PYFOUNDER_IP = ''
 PYFOUNDER_URL = ''
