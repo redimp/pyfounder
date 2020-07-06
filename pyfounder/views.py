@@ -330,6 +330,19 @@ def api_remove(mac):
     # "send:" reboot command
     return "removed from database."
 
+@app.route('/api/update_pxe/<mac>')
+def api_update_pxe(mac):
+    # find host
+    try:
+        host = get_host(mac)
+        fns = host.update_boot_cfg()
+    except ConfigException as e:
+        return "Error: {}".format(e)
+    fns = [x for x in fns if x is not None]
+    if len(fns)<1:
+        return "Warning: No files updated."
+    return "{} updated.".format(", ".join(fns))
+
 @app.route('/api/install/<mac>')
 @app.route('/api/install/<mac>/<option>')
 def api_install(mac,option=None):
@@ -365,5 +378,6 @@ def api_setup():
     with open(filename, "w") as f:
         f.write(content)
     print(content)
+    # TODO grub
     messages.append("file: {} updated.".format(filename))
     return "\n".join(messages)

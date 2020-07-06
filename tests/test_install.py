@@ -132,7 +132,23 @@ class InstallTest(ClientLiveServerTest):
         # check remote command
         response = self.requests_get("/discovery-remote-control/00:11:22:33:aa:55")
         self.assertEqual('reboot',response.text)
-        # check pxe file
+
+        # check pxe files
+        self._assert_boot_installer_example1()
+
+        # test update_xe
+        # remove grub file
+        example1_grub_filepath = os.path.join(self.flask_app.config['GRUBCFG_DIRECTORY'],
+                'grub.cfg-00:11:22:33:aa:55')
+        os.remove(example1_grub_filepath)
+        # run update
+        result = self.run_founder(["update_pxe", "example1"])
+        self.assertIn('[ example1 ]', result.output)
+        self.assertIn('grub/grub.cfg-00:11:22:33:aa:55', result.output)
+        self.assertIn('pxelinux.cfg/01-00-11-22-33-aa-55', result.output)
+        self.assertIn('updated', result.output)
+
+        # check f files were rebuilded
         self._assert_boot_installer_example1()
 
         # emulate installer steps

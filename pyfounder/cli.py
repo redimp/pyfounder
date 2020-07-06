@@ -302,6 +302,12 @@ def host_rebuild(hostname):
     """Rebuild the host"""
     return send_api_command(hostname, 'rebuild')
 
+@cli.command('update_pxe')
+@click.argument('hostname', nargs=-1)
+def host_update_pxe(hostname):
+    """Rewrite the hosts pxe configuration"""
+    return send_api_command(hostname, 'update_pxe')
+
 @cli.command('state')
 @click.argument('hostname', nargs=-1)
 @click.option('--add')
